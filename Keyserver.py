@@ -174,15 +174,21 @@ if __name__ == '__main__':
     if len(sys.argv) >= 2:
         fname = sys.argv[1]
         KEYDATA = open(fname, 'r').read()
+        from monkeysign.gpg import TempKeyring
+        tmpkeyring = TempKeyring()
+        if tmpkeyring.import_data(KEYDATA):
+            fpr = tmpkeyring.get_keys().keys()[0]
     else:
         KEYDATA = 'Example data'
+        fpr = "NO fingerprint"
+    log.info('loading keydata with fingerprint %s', fpr)
 
     if len(sys.argv) >= 3:
         timeout = int(sys.argv[2])
     else:
         timeout = 5
 
-    t = ServeKeyThread(KEYDATA)
+    t = ServeKeyThread(KEYDATA, fpr)
     stop_t = Thread(target=stop_thread, args=(t,timeout))
     stop_t.daemon = True
     t.start()
