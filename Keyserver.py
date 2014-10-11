@@ -63,9 +63,10 @@ class ServeKeyThread(Thread):
     If you want to stop serving, call shutdown().
     '''
 
-    def __init__(self, data, port=9001, *args, **kwargs):
+    def __init__(self, data, fpr, port=9001, *args, **kwargs):
         '''Initializes the server to serve the data'''
         self.keydata = data
+        self.fpr = fpr
         self.port = port
         super(ServeKeyThread, self).__init__(*args, **kwargs)
         self.daemon = True
@@ -86,6 +87,7 @@ class ServeKeyThread(Thread):
 
         tries = 10
 
+        fpr = self.fpr if self.fpr else "FIXME fingerprint"
         kd = data if data else self.keydata
         class KeyRequestHandler(KeyRequestHandlerBase):
             '''You will need to create this during runtime'''
@@ -102,10 +104,11 @@ class ServeKeyThread(Thread):
                 # This is a bit of a hack, it really should be
                 # in some lower layer, such as the place were
                 # the socket is created and listen()ed on.
+
                 self.avahi_publisher = ap = AvahiPublisher(
                     service_port = port_i,
                     service_name = 'HTTP Keyserver',
-                    service_txt = 'FIXME fingeprint', #FIXME Fingerprint
+                    service_txt = fpr,
                     # self.keydata is too big for Avahi; it chrashes
                     service_type = '_geysign._tcp',
                 )

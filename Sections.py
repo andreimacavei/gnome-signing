@@ -267,9 +267,10 @@ class KeySignSection(Gtk.VBox):
                 keyid = self.last_selected_key.keyid()
                 self.keyring.export_data(fpr=str(keyid), secret=False)
                 keydata = self.keyring.context.stdout
+                fpr = self.last_selected_key.fpr
 
-                self.log.debug("Keyserver switched on")
-                self.app.setup_server(keydata)
+                self.log.debug("Keyserver switched on ! Serving key with fpr: %s", fpr)
+                self.app.setup_server(keydata, fpr)
 
             self.backButton.set_sensitive(True)
 
