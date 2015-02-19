@@ -196,12 +196,17 @@ if __name__ == '__main__':
         t.shutdown()
 
     import sys
+    from monkeysign.gpg import TempKeyring
+
+    tmp = TempKeyring()
+    tmp.context.set_option('always-trust')
     if len(sys.argv) >= 2:
         fname = sys.argv[1]
         KEYDATA = open(fname, 'r').read()
-        # FIXME: Someone needs to determine the fingerprint
-        #        of the data just read
-        fpr = ''.join('F289 F7BA 977D F414 3AE9  FDFB F70A 0290 6C30 1813'.split())
+
+        tmp.import_data(KEYDATA)
+        # we assume KEYDATA contains only one key
+        fpr, _ = tmp.get_keys().items()[0]
     else:
         KEYDATA = 'Example data'
         fpr = ''.join('F289 F7BA 977D F414 3AE9  FDFB F70A 0290 6C30 1813'.split())
