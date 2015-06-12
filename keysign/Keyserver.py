@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 #    Copyright 2014 Tobias Mueller <muelli@cryptobitch.de>
 #    Copyright 2014 Andrei Macavei <andrei.macavei89@gmail.com>
+#    Copyright 2015 Jody Hansen <jobediah.hansen@gmail.com>
 #
 #    This file is part of GNOME Keysign.
 #
@@ -23,6 +24,10 @@ import socket
 from SocketServer import ThreadingMixIn
 from threading import Thread
 
+# This is probably really bad...  But doing relative imports only
+# works for modules.  However, I want to be able to call this Keyserver.py
+# for testing purposes.
+from __init__ import __version__
 from network.AvahiPublisher import AvahiPublisher
 
 log = logging.getLogger()
@@ -49,11 +54,23 @@ class KeyRequestHandlerBase(BaseHTTPServer.BaseHTTPRequestHandler):
         self.end_headers()
         return kd
 
-class ThreadedKeyserver(BaseHTTPServer.HTTPServer, ThreadingMixIn):
+class ThreadedKeyserver(ThreadingMixIn, BaseHTTPServer.HTTPServer):
     '''The keyserver in a threaded fashion'''
-    pass
+    address_family = socket.AF_INET6
 
+    def __init__(self, server_address, *args, **kwargs):
+        if issubclass(self.__class__, object):
+            super(ThreadedKeyserver, self).__init__(*args, **kwargs)
+        else:
+            BaseHTTPServer.HTTPServer.__init__(self, server_address, *args, **kwargs)
+            # WTF? There is no __init__..?
+            # ThreadingMixIn.__init__(self, server_address, *args, **kwargs)
 
+        def server_bind(self):
+            # Override this method to be sure v6only is false: we want to
+            # listen to both IPv4 and IPv6!
+            self.socket.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, False)
+            BaseHTTPServer.HTTPServer.server_bind(self)
 
 
 
@@ -73,7 +90,7 @@ class ServeKeyThread(Thread):
         self.httpd = None
 
 
-    def start(self, data=None, port=None, *args, **kwargs):
+    def start(self, data=None, fpr=None, port=None, *args, **kwargs):
         '''This is run in the same thread as the caller.
         This calls run() in a separate thread.
         In order to resolve DBus issues, most things
@@ -84,11 +101,13 @@ class ServeKeyThread(Thread):
         '''
 
         port = port or self.port or 9001
+        fpr = fpr or self.fpr
 
         tries = 10
 
         fpr = self.fpr if self.fpr else "FIXME fingerprint"
         kd = data if data else self.keydata
+
         class KeyRequestHandler(KeyRequestHandlerBase):
             '''You will need to create this during runtime'''
             keydata = kd
@@ -104,11 +123,18 @@ class ServeKeyThread(Thread):
                 # This is a bit of a hack, it really should be
                 # in some lower layer, such as the place were
                 # the socket is created and listen()ed on.
+                service_txt = {
+                    'fingerprint': fpr,
+                    'version': __version__,
+                }
+
+
+                log.info('Requesting Avahi with txt: %s', service_txt)
 
                 self.avahi_publisher = ap = AvahiPublisher(
                     service_port = port_i,
-                    service_name = 'HTTP Keyserver',
-                    service_txt = fpr,
+                    service_name = 'HTTP Keyserver %s' % fpr,
+                    service_txt = service_txt,
                     # self.keydata is too big for Avahi; it chrashes
                     service_type = '_geysign._tcp',
                 )
@@ -174,14 +200,12 @@ if __name__ == '__main__':
     if len(sys.argv) >= 2:
         fname = sys.argv[1]
         KEYDATA = open(fname, 'r').read()
-        from monkeysign.gpg import TempKeyring
-        tmpkeyring = TempKeyring()
-        if tmpkeyring.import_data(KEYDATA):
-            fpr = tmpkeyring.get_keys().keys()[0]
+        # FIXME: Someone needs to determine the fingerprint
+        #        of the data just read
+        fpr = ''.join('F289 F7BA 977D F414 3AE9  FDFB F70A 0290 6C30 1813'.split())
     else:
         KEYDATA = 'Example data'
-        fpr = "NO fingerprint"
-    log.info('loading keydata with fingerprint %s', fpr)
+        fpr = ''.join('F289 F7BA 977D F414 3AE9  FDFB F70A 0290 6C30 1813'.split())
 
     if len(sys.argv) >= 3:
         timeout = int(sys.argv[2])
