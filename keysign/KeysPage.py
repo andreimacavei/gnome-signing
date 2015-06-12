@@ -37,10 +37,10 @@ log = logging.getLogger()
 class KeysPage(Gtk.VBox):
     '''This represents a list of keys with the option for the user
     to select one key to proceed.
-    
+
     This class emits a `key-selection-changed' signal when the user
     initially selects a key such that it is highlighted.
-    
+
     The `key-selected' signal is emitted when the user commits
     to a key, i.e. by pressing a designated button to make his
     selection public.
@@ -58,7 +58,7 @@ class KeysPage(Gtk.VBox):
 
     def __init__(self, show_public_keys=False):
         '''Sets the widget up.
-        
+
         The show_public_keys parameter is meant for development
         purposes only.  If set to True, the widget will show
         the public keys, too.  Otherwise, secret keys are shown.
@@ -123,7 +123,7 @@ class KeysPage(Gtk.VBox):
         self.treeView.append_column(nameColumn)
         self.treeView.append_column(emailColumn)
         self.treeView.append_column(keyColumn)
-        
+
         self.treeView.connect('row-activated', self.on_row_activated)
 
         # make the tree view resposive to single click selection
@@ -140,7 +140,7 @@ class KeysPage(Gtk.VBox):
         self.hpane = Gtk.HPaned()
         self.hpane.pack1(self.scrolled_window, False, False)
         self.right_pane = Gtk.VBox()
-        right_label = Gtk.Label(label='Select key on the left')
+        right_label = Gtk.Label(label=_('Select key on the left'))
         self.right_pane.add(right_label)
         # Hm, right now, the width of the right pane changes, when
         # a key is selected, because the right pane's content will be
@@ -171,17 +171,17 @@ class KeysPage(Gtk.VBox):
 
     def on_selection_changed(self, selection, *args):
         log.debug('Selected new TreeView item %s = %s', selection, args)
-        
+
         name, email, keyid = self.get_items_from_selection(selection)
-        
+
         key = self.keysDict[keyid]
         self.emit('key-selection-changed', keyid)
-        
+
         try:
             exp_date = datetime.fromtimestamp(float(key.expiry))
             expiry = "{:%Y-%m-%d %H:%M:%S}".format(exp_date)
         except ValueError, e:
-            expiry = "No expiration date"
+            expiry = _("No expiration date")
 
         pane = self.right_pane
         for child in pane.get_children():
@@ -192,9 +192,9 @@ class KeysPage(Gtk.VBox):
             pane.remove(child)
         ctx = {'keyid':keyid, 'expiry':expiry, 'sigs':''}
         keyid_label = Gtk.Label(label='Key {keyid}'.format(**ctx))
-        expiration_label = Gtk.Label(label='Expires: {expiry}'.format(**ctx))
+        expiration_label = Gtk.Label(label=_('Expires: {expiry}').format(**ctx))
         #signatures_label = Gtk.Label(label='{sigs} signatures'.format(**ctx))
-        publish_button = Gtk.Button(label='Go ahead!'.format(**ctx))
+        publish_button = Gtk.Button(label=_('Go ahead!').format(**ctx))
         publish_button.connect('clicked', self.on_publish_button_clicked, key)
         map(pane.add, (keyid_label, expiration_label,
                        #signatures_label,
@@ -205,7 +205,7 @@ class KeysPage(Gtk.VBox):
     def on_row_activated(self, treeview, tree_path, column):
         '''A callback for when the user "activated" a row,
         e.g. by double-clicking an entry.
-        
+
         It emits the key-selected signal.
         '''
         # We just hijack the existing function.
@@ -228,7 +228,7 @@ class KeysPage(Gtk.VBox):
 
 class Keys(Gtk.Application):
     """A widget which displays keys in a user's Keyring.
-    
+
     Once the user has selected a key, the key-selected
     signal will be thrown.
     """
@@ -271,7 +271,7 @@ class Keys(Gtk.Application):
     def on_key_selection_changed(self, button, key):
         """This is the connected to the KeysPage's key-selection-changed
         signal
-        
+
         As a user of that widget, you would show more details
         in the GUI or prepare for a final commitment by the user.
         """
@@ -280,13 +280,13 @@ class Keys(Gtk.Application):
 
     def on_key_selected(self, button, key):
         """This is the connected to the KeysPage's key-selected signal
-        
+
         As a user of that widget, you would enable buttons or proceed
         with the GUI.
         """
         self.log.info('User committed to a key! %s', key)
 
-                                                
+
 def parse_command_line(argv):
     """Parse command line argument. See -h option
 
@@ -319,18 +319,18 @@ def main(args=sys.argv):
                         format='%(name)s (%(levelname)s): %(message)s')
     try:
         arguments = parse_command_line(args)
-        
+
         app = Keys()
         try:
             GLib.unix_signal_add_full(GLib.PRIORITY_HIGH, signal.SIGINT, lambda *args : app.quit(), None)
         except AttributeError:
             pass
-    
+
         exit_status = app.run(None)
-    
+
         return exit_status
 
-        
+
     finally:
         logging.shutdown()
 

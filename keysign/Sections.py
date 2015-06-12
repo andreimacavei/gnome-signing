@@ -55,9 +55,9 @@ Gst.init([])
 
 
 FPR_PREFIX = "OPENPGP4FPR:"
-progress_bar_text = ["Step 1: Scan QR Code or type fingerprint and click on 'Download' button",
-                     "Step 2: Compare the received fpr with the owner's fpr and click 'Sign'",
-                     "Step 3: Key was succesfully signed and an email was send to owner."]
+progress_bar_text = [_("Step 1: Scan QR Code or type fingerprint and click on 'Download' button"),
+                     _("Step 2: Compare the received fpr with the owner's fpr and click 'Sign'"),
+                     _("Step 3: Key was succesfully signed and an email was send to owner.")]
 
 
 SUBJECT = 'Your signed key $fingerprint'
@@ -204,7 +204,7 @@ class KeySignSection(Gtk.VBox):
 
 
         # create back button
-        self.backButton = Gtk.Button('Back')
+        self.backButton = Gtk.Button(_('Back'))
         self.backButton.set_image(Gtk.Image.new_from_icon_name("go-previous", Gtk.IconSize.BUTTON))
         self.backButton.set_always_show_image(True)
         self.backButton.connect('clicked', self.on_button_clicked)
@@ -330,12 +330,12 @@ class GetKeySection(Gtk.VBox):
         self.progressBar.set_show_text(True)
         self.progressBar.set_fraction(1.0/3)
 
-        self.nextButton = Gtk.Button('Next')
+        self.nextButton = Gtk.Button(_('Next'))
         self.nextButton.connect('clicked', self.on_button_clicked)
         self.nextButton.set_image(Gtk.Image.new_from_icon_name("go-next", Gtk.IconSize.BUTTON))
         self.nextButton.set_always_show_image(True)
 
-        self.backButton = Gtk.Button('Back')
+        self.backButton = Gtk.Button(_('Back'))
         self.backButton.connect('clicked', self.on_button_clicked)
         self.backButton.set_image(Gtk.Image.new_from_icon_name('go-previous', Gtk.IconSize.BUTTON))
         self.backButton.set_always_show_image(True)
@@ -632,8 +632,8 @@ class GetKeySection(Gtk.VBox):
                 self.last_received_fingerprint = fingerprint
 
                 # error callback function
-                err = lambda x: self.signPage.mainLabel.set_markup('<span size="15000">'
-                        'Error downloading key with fpr\n{}</span>'
+                err = lambda x: self.signPage.mainLabel.set_markup('<span size="15000">' +
+                        _('Error downloading key with fpr\n{}</span>')
                         .format(fingerprint))
                 # use GLib.idle_add to use a separate thread for the downloading of
                 # the keydata

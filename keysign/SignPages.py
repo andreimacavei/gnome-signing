@@ -38,7 +38,7 @@ log = logging.getLogger()
 
 def parse_sig_list(text):
     '''Parses GnuPG's signature list (i.e. list-sigs)
-    
+
     The format is described in the GnuPG man page'''
     sigslist = []
     for block in text.split("\n"):
@@ -55,10 +55,10 @@ def parse_sig_list(text):
 _keyring = None
 def signatures_for_keyid(keyid, keyring=None):
     '''Returns the list of signatures for a given key id
-    
+
     This will call out to GnuPG list-sigs, using Monkeysign,
     and parse the resulting string into a list of signatures.
-    
+
     A default Keyring will be used unless you pass an instance
     as keyring argument.
     '''
@@ -113,7 +113,7 @@ class KeyPresentPage(Gtk.HBox):
 
         self.pack_start(leftVBox, True, True, 0)
         self.pack_start(self.rightVBox, True, True, 0)
-        
+
         if self.fpr:
             self.setup_fingerprint_widget(self.fpr)
 
@@ -164,16 +164,16 @@ class KeyDetailsPage(Gtk.VBox):
         self.keyring = Keyring()
 
         uidsLabel = Gtk.Label()
-        uidsLabel.set_text("UIDs")
+        uidsLabel.set_text(_("UIDs"))
 
         # this will later be populated with uids when user selects a key
         self.uidsBox = Gtk.VBox(spacing=5)
 
         self.expireLabel = Gtk.Label()
-        self.expireLabel.set_text("Expires 0000-00-00")
+        self.expireLabel.set_text(_("Expires 0000-00-00"))
 
         self.signatures_label = signaturesLabel = Gtk.Label()
-        signaturesLabel.set_text("Signatures")
+        signaturesLabel.set_text(_("Signatures"))
 
         # this will also be populated later
         self.signaturesBox = Gtk.VBox(spacing=5)
@@ -206,13 +206,13 @@ class KeyDetailsPage(Gtk.VBox):
 
         try:
             exp_date = datetime.fromtimestamp(float(openPgpKey.expiry))
-            expiry = "Expires {:%Y-%m-%d %H:%M:%S}".format(exp_date)
+            expiry = _("Expires {:%Y-%m-%d %H:%M:%S}").format(exp_date)
         except ValueError, e:
-            expiry = "No expiration date"
+            expiry = _("No expiration date")
 
         self.expireLabel.set_markup(expiry)
-        
-        
+
+
         ### Set up signatures
         keyid = str(openPgpKey.keyid())
         sigslist = signatures_for_keyid(keyid)
@@ -230,12 +230,12 @@ class KeyDetailsPage(Gtk.VBox):
                 date = datetime.fromtimestamp(float(timestamp))
                 sigLabel.set_markup(str(keyid) + "\t\t" + date.ctime())
                 sigLabel.set_line_wrap(True)
-    
+
                 self.signaturesBox.pack_start(sigLabel, False, False, 0)
                 sigLabel.show()
-            
+
         sigLabel = Gtk.Label()
-        sigLabel.set_markup("%d signatures" % len(sigslist))
+        sigLabel.set_markup(_("%d signatures") % len(sigslist))
         sigLabel.set_line_wrap(True)
         self.signaturesBox.pack_start(sigLabel, False, False, 0)
         sigLabel.show()
@@ -251,9 +251,9 @@ class ScanFingerprintPage(Gtk.HBox):
 
         # set up labels
         leftLabel = Gtk.Label()
-        leftLabel.set_markup('Type fingerprint')
+        leftLabel.set_markup(_('Type fingerprint'))
         rightLabel = Gtk.Label()
-        rightLabel.set_markup('... or scan QR code')
+        rightLabel.set_markup(_('... or scan QR code'))
 
         # set up text editor
         self.textview = Gtk.TextView()
@@ -264,13 +264,13 @@ class ScanFingerprintPage(Gtk.HBox):
         scrolledwindow.add(self.textview)
 
         # set up webcam frame
-        self.scanFrame = Gtk.Frame(label='QR Scanner')
+        self.scanFrame = Gtk.Frame(label=_('QR Scanner'))
         self.scanFrame = BarcodeReaderGTK()
         self.scanFrame.set_size_request(150,150)
         self.scanFrame.show()
 
         # set up load button: this will be used to load a qr code from a file
-        self.loadButton = Gtk.Button('Open Image')
+        self.loadButton = Gtk.Button(_('Open Image'))
         self.loadButton.set_image(Gtk.Image.new_from_icon_name('gtk-open', Gtk.IconSize.BUTTON))
         self.loadButton.connect('clicked', self.on_loadbutton_clicked)
         self.loadButton.set_always_show_image(True)
@@ -299,7 +299,7 @@ class ScanFingerprintPage(Gtk.HBox):
         start_iter = self.textbuffer.get_start_iter()
         end_iter = self.textbuffer.get_end_iter()
         raw_text = self.textbuffer.get_text(start_iter, end_iter, False)
-        
+
         return raw_text
 
 
@@ -325,7 +325,7 @@ class SignKeyPage(Gtk.VBox):
         # should be disabled
         key_text = GLib.markup_escape_text(str(key))
 
-        markup = """\
+        markup = _("""\
 
 
 Signing the following key
@@ -333,7 +333,7 @@ Signing the following key
 <b>{0}</b>
 
 Press 'Next' if you have checked the ID of the person
-and you want to sign all UIDs on this key.""".format(key_text)
+and you want to sign all UIDs on this key.""").format(key_text)
 
         self.mainLabel.set_markup(markup)
         self.mainLabel.show()
@@ -347,20 +347,20 @@ class PostSignPage(Gtk.VBox):
 
         # setup the label
         signedLabel = Gtk.Label()
-        signedLabel.set_text('The key was signed and an email was sent to key owner! What next?')
+        signedLabel.set_text(_('The key was signed and an email was sent to key owner! What next?'))
 
         # setup the buttons
-        sendBackButton = Gtk.Button('   Resend email   ')
+        sendBackButton = Gtk.Button(_('   Resend email   '))
         sendBackButton.set_image(Gtk.Image.new_from_icon_name("gtk-network", Gtk.IconSize.BUTTON))
         sendBackButton.set_always_show_image(True)
         sendBackButton.set_halign(Gtk.Align.CENTER)
 
-        saveButton = Gtk.Button(' Save key locally ')
+        saveButton = Gtk.Button(_(' Save key locally '))
         saveButton.set_image(Gtk.Image.new_from_icon_name("gtk-save", Gtk.IconSize.BUTTON))
         saveButton.set_always_show_image(True)
         saveButton.set_halign(Gtk.Align.CENTER)
 
-        emailButton = Gtk.Button('Revoke signature')
+        emailButton = Gtk.Button(_('Revoke signature'))
         emailButton.set_image(Gtk.Image.new_from_icon_name("gtk-clear", Gtk.IconSize.BUTTON))
         emailButton.set_always_show_image(True)
         emailButton.set_halign(Gtk.Align.CENTER)
