@@ -1,35 +1,22 @@
 #!/usr/bin/env python
 
 # FIXME:
-# Extract all cases where gpg support comes from monkeysign and
+# Extract all use cases where gpg support comes from monkeysign and
 # add them to this file.
 
 import logging
 from string import Template
 
-import os
 import shutil
-import tempfile
 from tempfile import NamedTemporaryFile
 
 from monkeysign.gpg import Keyring, TempKeyring
 
-SUBJECT = 'Your signed key $fingerprint'
-BODY = '''Hi $uid,
-
-
-I have just signed your key
-
-      $fingerprint
-
-
-Thanks for letting me sign your key!
-
---
-GNOME Keys
-'''
 
 log = logging.getLogger()
+
+### From Sections.py ###
+
 def UIDExport(uid, keydata):
     """Export only the UID of a key.
     Unfortunately, GnuPG does not provide smth like
@@ -66,6 +53,22 @@ def MinimalExport(keydata):
     fingerprint, key = keys.items()[0]
     stripped_key = tmpkeyring.export_data(fingerprint)
     return stripped_key
+
+
+class KeyringCopy(Keyring):
+    """A Keyring class copy which is only for compatibility
+
+    This class will be the only way to instantiate monkeysign.gpg.Keyring.
+    """
+    def __init__(self, *args, **kwargs):
+        # Not a new style class...
+        if issubclass(self.__class__, object):
+            super(KeyringCopy, self).__init__(*args, **kwargs)
+        else:
+            Keyring.__init__(self, *args, **kwargs)
+
+        self.log = loggin.getLogger()
+
 
 
 class TempKeyringCopy(TempKeyring):
@@ -111,29 +114,20 @@ class TempKeyringCopy(TempKeyring):
                 tmpkeyring.import_data (keyring.export_data (fpr))
 
 
-def use_case_import_data(keyring, data):
-    if keyring.import_data(data):
-        imported_key_fpr = keyring.get_keys().keys()[0]
-        print imported_key_fpr
-
-    else:
-        print "Failed to import data"
-
-
-def use_case_export_data(keyring, keyid):
-    # keyring is a monkeysign.gpg.Keyring object
-    keys = keyring.get_keys(keyid)
-    key = keys.values()[0]
-
-    # key is a monkeysign.gpg.OpenPGPkey object
-    keyid = key.keyid()
-    fpr = key.fpr
-
-    keyring.export_data(fpr, secret=False)
-    keydata = keyring.context.stdout
+## Monkeypatching to get more debug output
+import monkeysign.gpg
+bc = monkeysign.gpg.Context.build_command
+def build_command(*args, **kwargs):
+    ret = bc(*args, **kwargs)
+    #log.info("Building command %s", ret)
+    log.debug("Building cmd: %s", ' '.join(["'%s'" % c for c in ret]))
+    return ret
+monkeysign.gpg.Context.build_command = build_command
 
 
-def use_case_sign_key(keyring, data, fingerprint):
+
+
+def sign_key_async(keyring, data, fingerprint):
     keyring.context.set_option('export-options', 'export-minimal')
 
     tmpkeyring = TempKeyringCopy(keyring)
@@ -200,87 +194,91 @@ def use_case_sign_key(keyring, data, fingerprint):
                              body=body, files=[filename])
 
 
-def use_case_main():
-    # These are a couple of use case scenarios for monkeysign' gpg wrapper
-    # that we need to redo using pygpgme
+### From SignPages.py ###
 
-    keyid = '181523F4'
-    keydata = 'Example data'
-    fingerprint = '140162A978431A0258B3EC24E69EEE14181523F4'
+def parse_sig_list(text):
+    '''Parses GnuPG's signature list (i.e. list-sigs)
 
-    keyring = Keyring()
-    tempkeyring = TempKeyringCopy(keyring)
+    The format is described in the GnuPG man page'''
+    sigslist = []
+    for block in text.split("\n"):
+        if block.startswith("sig"):
+            record = block.split(":")
+            log.debug("sig record (%d) %s", len(record), record)
+            keyid, timestamp, uid = record[4], record[5], record[9]
+            sigslist.append((keyid, timestamp, uid))
 
-    use_case_import_data(tempkeyring, keydata)
-    use_case_export_data(tempkeyring, keyid)
-    use_case_sign_key(tempkeyring, keydata, fingerprint)
-
-
-##############################################################################
-### This part is where we are replacing the above calls to monkeysign API with
-### gpgme calls
-##############################################################################
-
-import gpgme
-try:
-    from io import BytesIO
-except ImportError:
-    from StringIO import StringIO as BytesIO
+    return sigslist
 
 
-keydir = os.path.join(os.path.dirname(__file__), 'keys')
-test_fpr = '140162A978431A0258B3EC24E69EEE14181523F4'
+# This is a cache for a keyring object, so that we do not need
+# to create a new object every single time we parse signatures
+_keyring = None
+def signatures_for_keyid(keyid, keyring=None):
+    '''Returns the list of signatures for a given key id
+
+    This will call out to GnuPG list-sigs, using Monkeysign,
+    and parse the resulting string into a list of signatures.
+
+    A default Keyring will be used unless you pass an instance
+    as keyring argument.
+    '''
+    # Retrieving a cached instance of a keyring,
+    # unless we were being passed a keyring
+    global _keyring
+    if keyring is not None:
+        kr = keyring
+    else:
+        if _keyring is None:
+            _keyring = Keyring()
+        kr = _keyring
+
+    # FIXME: this would be better if it was done in monkeysign
+    kr.context.call_command(['list-sigs', keyid])
+    siglist = parse_sig_list(kr.context.stdout)
+
+    return siglist
 
 
-_gpghome = tempfile.mkdtemp(prefix='tmp.gpghome')
-gpg_conf_contents = ''
 
-ctx = gpgme.Context()
+### Below are wrappers for gpg use cases that might be good to have in our
+### implementation
 
-def set_up():
-    os.environ['GNUPGHOME'] = _gpghome
-    fd = open(os.path.join(_gpghome, 'gpg.conf'), 'wb')
-    fd.write(gpg_conf_contents.encode('UTF-8'))
-    fd.close()
+def keyring_set_option(keyring, option, value = None):
+    try:
+        if option in keyring.context.options:
+            keyring.context.set_option(option, value)
 
-
-def tear_down():
-    del os.environ['GNUPGHOME']
-    shutil.rmtree(_gpghome, ignore_errors=True)
+    except AttributeError:
+        log.error("Object %s has no attribute context", keyring)
+    except TypeError:
+        log.error("Object %s is not a Keyring type", keyring)
 
 
-def keyfile(key):
-    return open(os.path.join(keydir, key), 'rb')
+def keyring_call_command(keyring, command, stdin = None):
+    try:
+        if option in keyring.context.options:
+            keyring.context.call_command(command, stdin)
+
+    except AttributeError:
+        log.error("Object %s has no attribute context", keyring)
+    except TypeError:
+        log.error("Object %s is not a Keyring type", keyring)
 
 
-def import_data(keydata):
-    result = ctx.import_(keydata)
-    return result
+def keyring_import_data(keyring, data):
+    if keyring.import_data(data):
+        imported_key_fpr = keyring.get_keys().keys()[0]
+        log.debug("Imported data with fpr:\n%s", imported_key_fpr)
+
+    else:
+        log.error("Couldn't import data:\n%s", data)
 
 
-def export_key(fpr, armor=True):
-    ctx.armor = armor
-    keydata = BytesIO()
-    ctx.export(fpr, keydata)
+def keyring_export_data(keyring, keyid):
+    keys = keyring.get_keys(keyid)
+    key = keys.values()[0]
+
+    keyring.export_data(key.fpr, secret=False)
+    keydata = keyring.context.stdout
     return keydata
-
-
-def main():
-    # set up the environment
-    set_up()
-
-    # test import
-    with keyfile('key1.pub') as fp:
-        result = import_data(fp)
-    assert result.imports[0] == (test_fpr, None, gpgme.IMPORT_NEW), "Fail on import"
-
-    # test export
-    keydata = export_key(result.imports[0][0])
-    assert keydata.getvalue().startswith(
-            b'-----BEGIN PGP PUBLIC KEY BLOCK-----\n'), "Fail on export"
-
-    # clean testing environment
-    tear_down()
-
-if __name__ == '__main__':
-    main()
