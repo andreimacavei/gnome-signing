@@ -6,8 +6,11 @@
 
 import logging
 from string import Template
-from tempfile import NamedTemporaryFile
+
+import os
 import shutil
+import tempfile
+from tempfile import NamedTemporaryFile
 
 from monkeysign.gpg import Keyring, TempKeyring
 
@@ -197,23 +200,13 @@ def use_case_sign_key(keyring, data, fingerprint):
                              body=body, files=[filename])
 
 
-#
-# FIXME: replace the following globals with the proper data of your testing keys
-#
-
-# the last 8 characters of the test key fingerprint
-keyid = '181523F4'
-
-# public test key data to import
-keydata = '''
-BF532A1C50FCCF59AF131C884D904D5F77D936CD807B6D1D5D23F55A2DF76C2CB325DF1E76757A53664D22C885ECD5569460F5F364407546FA7A09070B3B3FCCBFEAC92D713A42EAD73D42AD857A889C91CA9B9C7F4F3FCB16432EBF
-'''
-# fingerprint of the test key to sign
-fingerprint = '140162A978431A0258B3EC24E69EEE14181523F4'
-
-def main():
+def use_case_main():
     # These are a couple of use case scenarios for monkeysign' gpg wrapper
     # that we need to redo using pygpgme
+
+    keyid = '181523F4'
+    keydata = 'Example data'
+    fingerprint = '140162A978431A0258B3EC24E69EEE14181523F4'
 
     keyring = Keyring()
     tempkeyring = TempKeyringCopy(keyring)
@@ -223,6 +216,71 @@ def main():
     use_case_sign_key(tempkeyring, keydata, fingerprint)
 
 
+##############################################################################
+### This part is where we are replacing the above calls to monkeysign API with
+### gpgme calls
+##############################################################################
+
+import gpgme
+try:
+    from io import BytesIO
+except ImportError:
+    from StringIO import StringIO as BytesIO
+
+
+keydir = os.path.join(os.path.dirname(__file__), 'keys')
+test_fpr = '140162A978431A0258B3EC24E69EEE14181523F4'
+
+
+_gpghome = tempfile.mkdtemp(prefix='tmp.gpghome')
+gpg_conf_contents = ''
+
+ctx = gpgme.Context()
+
+def set_up():
+    os.environ['GNUPGHOME'] = _gpghome
+    fd = open(os.path.join(_gpghome, 'gpg.conf'), 'wb')
+    fd.write(gpg_conf_contents.encode('UTF-8'))
+    fd.close()
+
+
+def tear_down():
+    del os.environ['GNUPGHOME']
+    shutil.rmtree(_gpghome, ignore_errors=True)
+
+
+def keyfile(key):
+    return open(os.path.join(keydir, key), 'rb')
+
+
+def import_data(keydata):
+    result = ctx.import_(keydata)
+    return result
+
+
+def export_key(fpr, armor=True):
+    ctx.armor = armor
+    keydata = BytesIO()
+    ctx.export(fpr, keydata)
+    return keydata
+
+
+def main():
+    # set up the environment
+    set_up()
+
+    # test import
+    with keyfile('key1.pub') as fp:
+        result = import_data(fp)
+    assert result.imports[0] == (test_fpr, None, gpgme.IMPORT_NEW), "Fail on import"
+
+    # test export
+    keydata = export_key(result.imports[0][0])
+    assert keydata.getvalue().startswith(
+            b'-----BEGIN PGP PUBLIC KEY BLOCK-----\n'), "Fail on export"
+
+    # clean testing environment
+    tear_down()
 
 if __name__ == '__main__':
     main()
