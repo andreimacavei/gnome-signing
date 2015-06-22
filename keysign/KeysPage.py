@@ -99,7 +99,7 @@ class KeysPage(Gtk.VBox):
                 # split into user's name and email
                 tokens = uid.split('<')
                 name = tokens[0].strip()
-                email = 'unknown'
+                email = _('unknown')
                 if len(tokens) > 1:
                     email = tokens[1].replace('>','').strip()
 
@@ -110,15 +110,15 @@ class KeysPage(Gtk.VBox):
 
         # setup 'Name' column
         nameRenderer = Gtk.CellRendererText()
-        nameColumn = Gtk.TreeViewColumn("Name", nameRenderer, text=0)
+        nameColumn = Gtk.TreeViewColumn(_("Name"), nameRenderer, text=0)
 
         # setup 'Email' column
         emailRenderer = Gtk.CellRendererText()
-        emailColumn = Gtk.TreeViewColumn("Email", emailRenderer, text=1)
+        emailColumn = Gtk.TreeViewColumn(_("Email"), emailRenderer, text=1)
 
         # setup 'Key' column
         keyRenderer = Gtk.CellRendererText()
-        keyColumn = Gtk.TreeViewColumn("Key", keyRenderer, text=2)
+        keyColumn = Gtk.TreeViewColumn(_("Key"), keyRenderer, text=2)
 
         self.treeView.append_column(nameColumn)
         self.treeView.append_column(emailColumn)
@@ -191,7 +191,7 @@ class KeysPage(Gtk.VBox):
             # text.
             pane.remove(child)
         ctx = {'keyid':keyid, 'expiry':expiry, 'sigs':''}
-        keyid_label = Gtk.Label(label='Key {keyid}'.format(**ctx))
+        keyid_label = Gtk.Label(label=_('Key {keyid}').format(**ctx))
         expiration_label = Gtk.Label(label=_('Expires: {expiry}').format(**ctx))
         #signatures_label = Gtk.Label(label='{sigs} signatures'.format(**ctx))
         publish_button = Gtk.Button(label=_('Go ahead!').format(**ctx))

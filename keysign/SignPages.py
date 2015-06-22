@@ -86,7 +86,7 @@ class KeyPresentPage(Gtk.HBox):
 
         # create left side Key labels
         leftTopLabel = Gtk.Label()
-        leftTopLabel.set_markup('<span size="15000">' + 'Key Fingerprint' + '</span>')
+        leftTopLabel.set_markup('<span size="15000">' + _('Key Fingerprint') + '</span>')
 
         self.fingerprintLabel = Gtk.Label()
         self.fingerprintLabel.set_selectable(True)
@@ -101,7 +101,7 @@ class KeyPresentPage(Gtk.HBox):
 
         # display QR code on the right side
         qrcodeLabel = Gtk.Label()
-        qrcodeLabel.set_markup('<span size="15000">' + 'Fingerprint QR code' + '</span>')
+        qrcodeLabel.set_markup('<span size="15000">' + _('Fingerprint QR code') + '</span>')
 
         self.qrcode = QRImage()
         self.qrcode.props.margin = 10
