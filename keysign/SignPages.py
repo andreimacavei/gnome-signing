@@ -17,6 +17,9 @@
 #    You should have received a copy of the GNU General Public License
 #    along with GNOME Keysign.  If not, see <http://www.gnu.org/licenses/>.
 
+from i18n import i18n
+_ = i18n.language.ugettext #use ugettext instead of getttext to avoid unicode errors
+
 from itertools import islice
 import logging
 import sys
@@ -164,13 +167,13 @@ class KeyDetailsPage(Gtk.VBox):
         self.keyring = Keyring()
 
         uidsLabel = Gtk.Label()
-        uidsLabel.set_text(_("UIDs"))
+        uidsLabel.set_text("UIDs")
 
         # this will later be populated with uids when user selects a key
         self.uidsBox = Gtk.VBox(spacing=5)
 
         self.expireLabel = Gtk.Label()
-        self.expireLabel.set_text(_("Expires 0000-00-00"))
+        self.expireLabel.set_text(_("Expires") + " 0000-00-00")
 
         self.signatures_label = signaturesLabel = Gtk.Label()
         signaturesLabel.set_text(_("Signatures"))
@@ -206,7 +209,7 @@ class KeyDetailsPage(Gtk.VBox):
 
         try:
             exp_date = datetime.fromtimestamp(float(openPgpKey.expiry))
-            expiry = _("Expires {:%Y-%m-%d %H:%M:%S}").format(exp_date)
+            expiry = _("Expires") +" {:%Y-%m-%d %H:%M:%S}".format(exp_date)
         except ValueError, e:
             expiry = _("No expiration date")
 
@@ -235,7 +238,7 @@ class KeyDetailsPage(Gtk.VBox):
                 sigLabel.show()
 
         sigLabel = Gtk.Label()
-        sigLabel.set_markup(_("%d signatures") % len(sigslist))
+        sigLabel.set_markup("%d " % len(siglist) + _("signatures"))
         sigLabel.set_line_wrap(True)
         self.signaturesBox.pack_start(sigLabel, False, False, 0)
         sigLabel.show()
@@ -253,7 +256,7 @@ class ScanFingerprintPage(Gtk.HBox):
         leftLabel = Gtk.Label()
         leftLabel.set_markup(_('Type fingerprint'))
         rightLabel = Gtk.Label()
-        rightLabel.set_markup(_('... or scan QR code'))
+        rightLabel.set_markup('... ' + _('or scan QR code'))
 
         # set up text editor
         self.textview = Gtk.TextView()
@@ -325,15 +328,12 @@ class SignKeyPage(Gtk.VBox):
         # should be disabled
         key_text = GLib.markup_escape_text(str(key))
 
-        markup = _("""\
+        markup = "\n\n" + _("Signing the following key") + """\
 
+<b>%s</b>
 
-Signing the following key
-
-<b>{0}</b>
-
-Press 'Next' if you have checked the ID of the person
-and you want to sign all UIDs on this key.""").format(key_text)
+""" % key_text + _("Press 'Next' if you have checked the ID of the person\
+\nand you want to sign all UIDs on this key.")
 
         self.mainLabel.set_markup(markup)
         self.mainLabel.show()

@@ -1,0 +1,148 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2015-06-23 21:35+0300\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: keysign/KeysPage.py:105
+msgid "unknown"
+msgstr ""
+
+#: keysign/KeysPage.py:116
+msgid "Name"
+msgstr ""
+
+#: keysign/KeysPage.py:120
+msgid "Email"
+msgstr ""
+
+#: keysign/KeysPage.py:124
+msgid "Key"
+msgstr ""
+
+#: keysign/KeysPage.py:146
+msgid "Select key on the left"
+msgstr ""
+
+#: keysign/KeysPage.py:187 keysign/SignPages.py:214
+msgid "No expiration date"
+msgstr ""
+
+#: keysign/KeysPage.py:198 keysign/SignPages.py:176 keysign/SignPages.py:212
+msgid "Expires"
+msgstr ""
+
+#: keysign/KeysPage.py:200
+msgid "Go ahead!"
+msgstr ""
+
+#: keysign/MainWindow.py:63
+msgid "Keys"
+msgstr ""
+
+#: keysign/MainWindow.py:64
+msgid "Get Key"
+msgstr ""
+
+#: keysign/MainWindow.py:89
+msgid "Scan Image"
+msgstr ""
+
+#: keysign/MainWindow.py:92
+msgid "Quit"
+msgstr ""
+
+#: keysign/SignPages.py:92
+msgid "Key Fingerprint"
+msgstr ""
+
+#: keysign/SignPages.py:107
+msgid "Fingerprint QR code"
+msgstr ""
+
+#: keysign/SignPages.py:179
+msgid "Signatures"
+msgstr ""
+
+#: keysign/SignPages.py:241
+msgid "signatures"
+msgstr ""
+
+#: keysign/SignPages.py:257
+msgid "Type fingerprint"
+msgstr ""
+
+#: keysign/SignPages.py:259
+msgid "or scan QR code"
+msgstr ""
+
+#: keysign/SignPages.py:270
+msgid "QR Scanner"
+msgstr ""
+
+#: keysign/SignPages.py:276
+msgid "Open Image"
+msgstr ""
+
+#: keysign/SignPages.py:331
+msgid "Signing the following key"
+msgstr ""
+
+#: keysign/SignPages.py:335
+msgid ""
+"Press 'Next' if you have checked the ID of the person\n"
+"and you want to sign all UIDs on this key."
+msgstr ""
+
+#: keysign/SignPages.py:350
+msgid "The key was signed and an email was sent to key owner! What next?"
+msgstr ""
+
+#: keysign/SignPages.py:353
+msgid "   Resend email   "
+msgstr ""
+
+#: keysign/SignPages.py:358
+msgid " Save key locally "
+msgstr ""
+
+#: keysign/SignPages.py:363
+msgid "Revoke signature"
+msgstr ""
+
+#: keysign/Sections.py:61
+msgid "Step 1: Scan QR Code or type fingerprint and click on 'Download' button"
+msgstr ""
+
+#: keysign/Sections.py:62
+msgid "Step 2: Compare the received fpr with the owner's fpr and click 'Sign'"
+msgstr ""
+
+#: keysign/Sections.py:63
+msgid "Step 3: Key was succesfully signed and an email was send to owner."
+msgstr ""
+
+#: keysign/Sections.py:210 keysign/Sections.py:341
+msgid "Back"
+msgstr ""
+
+#: keysign/Sections.py:336
+msgid "Next"
+msgstr ""
+
+#: keysign/Sections.py:639
+msgid "Error downloading key with fpr"
+msgstr ""

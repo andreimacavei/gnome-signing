@@ -17,6 +17,9 @@
 #    You should have received a copy of the GNU General Public License
 #    along with GNOME Keysign.  If not, see <http://www.gnu.org/licenses/>.
 
+from i18n import i18n
+_ = i18n.language.ugettext #use ugettext instead of getttext to avoid unicode errors
+
 from datetime import datetime
 import signal
 import sys
@@ -191,8 +194,8 @@ class KeysPage(Gtk.VBox):
             # text.
             pane.remove(child)
         ctx = {'keyid':keyid, 'expiry':expiry, 'sigs':''}
-        keyid_label = Gtk.Label(label=_('Key {keyid}').format(**ctx))
-        expiration_label = Gtk.Label(label=_('Expires: {expiry}').format(**ctx))
+        keyid_label = Gtk.Label(label='Key {keyid}'.format(**ctx))
+        expiration_label = Gtk.Label(label=_('Expires') + ': {expiry}'.format(**ctx))
         #signatures_label = Gtk.Label(label='{sigs} signatures'.format(**ctx))
         publish_button = Gtk.Button(label=_('Go ahead!').format(**ctx))
         publish_button.connect('clicked', self.on_publish_button_clicked, key)

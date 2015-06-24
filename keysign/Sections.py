@@ -17,6 +17,9 @@
 #    You should have received a copy of the GNU General Public License
 #    along with GNOME Keysign.  If not, see <http://www.gnu.org/licenses/>.
 
+from i18n import i18n
+_ = i18n.language.ugettext #use ugettext instead of getttext to avoid unicode errors
+
 import logging
 from urlparse import ParseResult
 from string import Template
@@ -633,7 +636,7 @@ class GetKeySection(Gtk.VBox):
 
                 # error callback function
                 err = lambda x: self.signPage.mainLabel.set_markup('<span size="15000">' +
-                        _('Error downloading key with fpr\n{}</span>')
+                        _('Error downloading key with fpr') + '\n{}</span>'
                         .format(fingerprint))
                 # use GLib.idle_add to use a separate thread for the downloading of
                 # the keydata
