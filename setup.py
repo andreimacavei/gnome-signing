@@ -30,7 +30,7 @@ class build_trans(cmd.Command):
                     lang = f[:-3]
                     src = os.path.join(path, f)
                     dest_path = os.path.join('build', 'locale', lang, 'LC_MESSAGES')
-                    dest = os.path.join(dest_path, 'mussorgsky.mo')
+                    dest = os.path.join(dest_path, 'gnome-keysign.mo')
                     if not os.path.exists(dest_path):
                         os.makedirs(dest_path)
                     if not os.path.exists(dest):
@@ -54,7 +54,7 @@ class install_data(_install_data):
     def run(self):
         for lang in os.listdir('build/locale/'):
             lang_dir = os.path.join('share', 'locale', lang, 'LC_MESSAGES')
-            lang_file = os.path.join('build', 'locale', lang, 'LC_MESSAGES', 'mussorgsky.mo')
+            lang_file = os.path.join('build', 'locale', lang, 'LC_MESSAGES', 'gnome-keysign.mo')
             self.data_files.append( (lang_dir, [lang_file]) )
         _install_data.run(self)
 
