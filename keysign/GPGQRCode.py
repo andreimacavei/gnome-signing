@@ -20,20 +20,20 @@
 for keys and selects the one matching your input
 """
 from gi.repository import Gtk
-from monkeysign.gpg import Keyring
+from keysign.gpg.gpg import GetNewKeyring
 
 from QRCode import QRImage
 
 def main():
     import sys
     key = sys.argv[1]
-    keyring = Keyring()
+    keyring = GetNewKeyring()
     keys = keyring.get_keys(key)
     # Heh, we take the first key here. Maybe we should raise a warning
     # or so, when there is more than one key.
     fpr = keys.items()[0][0]
     data = 'OPENPGP4FPR:' + fpr
-    
+
     w = Gtk.Window()
     w.connect("delete-event", Gtk.main_quit)
     w.set_default_size(100,100)
