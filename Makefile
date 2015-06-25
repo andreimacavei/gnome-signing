@@ -1,3 +1,3 @@
 
 clean:
-		rm -f *.pyc
+		find . -name "*.pyc" -type f -delete

@@ -19,7 +19,8 @@ setup(
     packages = [
         'keysign',
         'keysign.compat',
-        'keysign.network'],
+        'keysign.network',
+        'keysign.gpg'],
     #package_dir={'keysign': 'keysign'},
     #package_data={'keysign': ['data/']},
     data_files=[
@@ -35,7 +36,7 @@ setup(
         # to not confuse Ubuntu 14.04's pip as that
         # seems incompatible with a newer requests library.
         # https://bugs.launchpad.net/ubuntu/+source/python-pip/+bug/1306991
-        'requests<=2.2', 
+        'requests<=2.2',
         'qrencode',
         #'monkeysign', # Apparently not in the cheeseshop
         # avahi # Also no entry in the cheeseshop
@@ -43,7 +44,7 @@ setup(
         ],
     license='GPLv3+',
     long_description=open('README.rst').read(),
-    
+
     entry_points = {
         #'console_scripts': [
         #    'keysign = keysign.main'
@@ -53,18 +54,18 @@ setup(
             'gks-qrcode = keysign.GPGQRCode:main',
         ],
     },
-    
+
     classifiers = [
         # Maybe not yet...
         #'Development Status :: 4 - Beta',
-        
+
         'Intended Audience :: Developers',
         'Intended Audience :: System Administrators',
         'Intended Audience :: End Users/Desktop',
         'Intended Audience :: Information Technology',
         'Intended Audience :: Legal Industry',
-        'Intended Audience :: Telecommunications Industry',    
-    
+        'Intended Audience :: Telecommunications Industry',
+
         'Programming Language :: Python',
         'Programming Language :: Python :: 2',
         # I think we are only 2.7 compatible
