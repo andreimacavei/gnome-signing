@@ -23,7 +23,7 @@ import sys
 import StringIO
 
 from gi.repository import GObject, Gtk, GLib, GdkPixbuf
-from monkeysign.gpg import Keyring
+from keysign.gpg.gpg import GetNewKeyring
 from qrencode import encode_scaled
 
 from datetime import datetime
@@ -38,7 +38,7 @@ log = logging.getLogger()
 
 def parse_sig_list(text):
     '''Parses GnuPG's signature list (i.e. list-sigs)
-    
+
     The format is described in the GnuPG man page'''
     sigslist = []
     for block in text.split("\n"):
@@ -55,10 +55,10 @@ def parse_sig_list(text):
 _keyring = None
 def signatures_for_keyid(keyid, keyring=None):
     '''Returns the list of signatures for a given key id
-    
+
     This will call out to GnuPG list-sigs, using Monkeysign,
     and parse the resulting string into a list of signatures.
-    
+
     A default Keyring will be used unless you pass an instance
     as keyring argument.
     '''
@@ -68,9 +68,7 @@ def signatures_for_keyid(keyid, keyring=None):
     if keyring is not None:
         kr = keyring
     else:
-        if _keyring is None:
-            _keyring = Keyring()
-        kr = _keyring
+        kr = _keyring if _keyring else GetNewKeyring()
 
     # FIXME: this would be better if it was done in monkeysign
     kr.context.call_command(['list-sigs', keyid])
@@ -113,7 +111,7 @@ class KeyPresentPage(Gtk.HBox):
 
         self.pack_start(leftVBox, True, True, 0)
         self.pack_start(self.rightVBox, True, True, 0)
-        
+
         if self.fpr:
             self.setup_fingerprint_widget(self.fpr)
 
@@ -161,7 +159,7 @@ class KeyDetailsPage(Gtk.VBox):
         self.log = logging.getLogger()
 
         # FIXME: this should be moved to KeySignSection
-        self.keyring = Keyring()
+        self.keyring = GetNewKeyring()
 
         uidsLabel = Gtk.Label()
         uidsLabel.set_text("UIDs")
@@ -211,8 +209,8 @@ class KeyDetailsPage(Gtk.VBox):
             expiry = "No expiration date"
 
         self.expireLabel.set_markup(expiry)
-        
-        
+
+
         ### Set up signatures
         keyid = str(openPgpKey.keyid())
         sigslist = signatures_for_keyid(keyid)
@@ -230,10 +228,10 @@ class KeyDetailsPage(Gtk.VBox):
                 date = datetime.fromtimestamp(float(timestamp))
                 sigLabel.set_markup(str(keyid) + "\t\t" + date.ctime())
                 sigLabel.set_line_wrap(True)
-    
+
                 self.signaturesBox.pack_start(sigLabel, False, False, 0)
                 sigLabel.show()
-            
+
         sigLabel = Gtk.Label()
         sigLabel.set_markup("%d signatures" % len(sigslist))
         sigLabel.set_line_wrap(True)
@@ -299,7 +297,7 @@ class ScanFingerprintPage(Gtk.HBox):
         start_iter = self.textbuffer.get_start_iter()
         end_iter = self.textbuffer.get_end_iter()
         raw_text = self.textbuffer.get_text(start_iter, end_iter, False)
-        
+
         return raw_text
 
 
