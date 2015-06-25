@@ -16,8 +16,8 @@ import gpgme
 log = logging.getLogger()
 
 keydir = os.path.join(os.path.dirname(__file__), 'keys')
-test_fpr = '140162A978431A0258B3EC24E69EEE14181523F4'
-
+test1_fpr = '140162A978431A0258B3EC24E69EEE14181523F4'
+test2_fpr = 'D09A409FC49466806CF79837946B842CDB8CFC4E'
 
 _gpghome = tempfile.mkdtemp(prefix='tmp.gpghome')
 
@@ -51,6 +51,21 @@ def export_key(context, fpr, armor=True):
     keydata = BytesIO()
     context.export(fpr, keydata)
     return keydata
+
+
+def get_key(context, fpr):
+    key = None
+    try:
+        key = context.get_key(fpr)
+    except gpgme.GpgmeError as err:
+        log.error('No key found with fpr %s', fpr)
+
+    return key
+
+
+def get_keylist(context, keyid = None, secret = False):
+    keys = [key for key in context.keylist(keyid, secret)]
+    return keys
 
 
 def main():

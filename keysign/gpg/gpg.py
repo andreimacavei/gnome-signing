@@ -1,9 +1,5 @@
 #!/usr/bin/env python
 
-# FIXME:
-# Extract all use cases where gpg support comes from monkeysign and
-# add them to this file.
-
 import logging
 from string import Template
 
@@ -116,8 +112,8 @@ monkeysign.gpg.Context.build_command = build_command
 
 
 
-### Below are wrappers for gpg use cases that might be good to have in our
-### implementation
+### Below functions represent gpg calls that mostly depend on
+### monkeysign.gpg.Keyring and monkeysign.gpg.Context classes
 
 def keyring_set_option(keyring, option, value = None):
     try:
@@ -159,6 +155,12 @@ def keyring_export_data(keyring, keyid):
     return keydata
 
 
+def keyring_get_keys(keyring, keyid=None):
+    keys_dict = keyring.get_keys(keyid)
+    return keys_dict
+
+
+
 if __name__ == '__main__':
-    keyring = GetKeyringCopy()
+    keyring = GetNewKeyring()
     print keyring.get_keys()
