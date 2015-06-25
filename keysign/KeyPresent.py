@@ -26,7 +26,7 @@ import logging
 from gi.repository import Gtk, GLib
 from gi.repository import GObject
 
-from monkeysign.gpg import Keyring
+from keysign.gpg.gpg import GetNewKeyring
 
 # These are relative imports
 from __init__ import __version__
@@ -41,7 +41,7 @@ log = logging.getLogger()
 class KeyPresent(Gtk.Application):
     """A demo application showing how to display sufficient details
     about a key such that it can be sent securely.
-    
+
     Note that the main purpose is to enable secure transfer, not
     reviewing key details.  As such, the implementation might change
     a lot, depending on the method of secure transfer.
@@ -127,10 +127,10 @@ def main(args=sys.argv):
                         format='%(name)s (%(levelname)s): %(message)s')
     try:
         arguments = parse_command_line(args)
-        
+
         #if arguments.gpg:
         #    keyid = arguments.file
-        #    keyring = Keyring()
+        #    keyring = GetNewKeyring()
         #    # this is a dict {fpr: key-instance}
         #    found_keys = keyring.get_keys(keyid)
         #    # We take the first item we found and export the actual keydata
@@ -146,12 +146,12 @@ def main(args=sys.argv):
             GLib.unix_signal_add_full(GLib.PRIORITY_HIGH, signal.SIGINT, lambda *args : app.quit(), None)
         except AttributeError:
             pass
-    
+
         exit_status = app.run(fpr)
-    
+
         return exit_status
 
-        
+
     finally:
         logging.shutdown()
 
