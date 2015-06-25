@@ -55,20 +55,8 @@ def MinimalExport(keydata):
     return stripped_key
 
 
-class KeyringCopy(Keyring):
-    """A Keyring class copy which is only for compatibility
-
-    This class will be the only way to instantiate monkeysign.gpg.Keyring.
-    """
-    def __init__(self, *args, **kwargs):
-        # Not a new style class...
-        if issubclass(self.__class__, object):
-            super(KeyringCopy, self).__init__(*args, **kwargs)
-        else:
-            Keyring.__init__(self, *args, **kwargs)
-
-        self.log = loggin.getLogger()
-
+def GetKeyringCopy():
+    return Keyring()
 
 
 class TempKeyringCopy(TempKeyring):
@@ -282,3 +270,8 @@ def keyring_export_data(keyring, keyid):
     keyring.export_data(key.fpr, secret=False)
     keydata = keyring.context.stdout
     return keydata
+
+
+if __name__ == '__main__':
+    keyring = GetKeyringCopy()
+    print keyring.get_keys()
