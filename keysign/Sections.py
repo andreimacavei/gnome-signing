@@ -29,11 +29,8 @@ from requests.exceptions import ConnectionError
 
 import sys
 
-from monkeysign.gpg import Keyring, TempKeyring
 from monkeysign.ui import MonkeysignUi
-from monkeysign.gpg import GpgRuntimeError
-
-from keysign.gpg.gpg import UIDExport, MinimalExport, GetKeyringCopy, TempKeyringCopy
+from keysign.gpg.gpg import UIDExport, MinimalExport, GetNewKeyring, GetNewTempKeyring, TempKeyringCopy
 
 from compat import gtkbutton
 import Keyserver
@@ -93,7 +90,7 @@ class KeySignSection(Gtk.VBox):
 
         self.app = app
         self.log = logging.getLogger()
-        self.keyring = Keyring()
+        self.keyring = GetNewKeyring()
 
         # these are needed later when we need to get details about
         # a selected key
@@ -350,7 +347,7 @@ class GetKeySection(Gtk.VBox):
 
         #FIXME: should we create a new TempKeyring for each key we want
         # to sign it ?
-        self.tmpkeyring = TempKeyring()
+        self.tmpkeyring = GetNewTempKeyring()
 
         other_clients = self.sort_clients(other_clients, fingerprint)
 
@@ -388,7 +385,7 @@ class GetKeySection(Gtk.VBox):
     def sign_key_async(self, fingerprint, callback=None, data=None, error_cb=None):
         self.log.debug("I will sign key with fpr {}".format(fingerprint))
 
-        keyring = Keyring()
+        keyring = GetNewKeyring()
         keyring.context.set_option('export-options', 'export-minimal')
 
         tmpkeyring = TempKeyringCopy(keyring)

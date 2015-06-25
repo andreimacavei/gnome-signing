@@ -55,9 +55,11 @@ def MinimalExport(keydata):
     return stripped_key
 
 
-def GetKeyringCopy():
+def GetNewKeyring():
     return Keyring()
 
+def GetNewTempKeyring():
+    return TempKeyring()
 
 class TempKeyringCopy(TempKeyring):
     """A temporary keyring which uses the secret keys of a parent keyring
