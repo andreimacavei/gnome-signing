@@ -43,8 +43,12 @@ def UIDExport_gpgme(uid, keydata):
     ctx = gpgme.Context()
     # XXX: do we need to set a "always-trust" flag ?
     data = BytesIO(keydata)
-    result = ctx.import_(data)
-    # check if import key had succes; no error is thrown by gpgme if wrong keydata
+    try:
+        result = ctx.import_(data)
+    except gpgme.GpgmeError as err:
+        log.error("Couldn't import the key with the following keydata:\n%s", keydata)
+        return None
+
     assert result.considered == 1, "Key for uid %s was not correctly imported" % (uid,)
     assert result.imported == 1, "Key for uid %s was not correctly imported" % (uid,)
     assert len(result.imports) == 1, "Key for uid %s was not correctly imported" % (uid,)
