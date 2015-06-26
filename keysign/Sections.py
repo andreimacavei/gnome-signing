@@ -31,6 +31,7 @@ import sys
 
 from monkeysign.ui import MonkeysignUi
 from keysign.gpg.gpg import UIDExport, MinimalExport, GetNewKeyring, GetNewTempKeyring, TempKeyringCopy
+from keysign.gpg.gpg import UIDExport_gpgme
 
 from compat import gtkbutton
 import Keyserver

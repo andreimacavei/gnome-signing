@@ -3,13 +3,71 @@
 import logging
 from string import Template
 
+import os
 import shutil
+import tempfile
 from tempfile import NamedTemporaryFile
 
 from monkeysign.gpg import Keyring, TempKeyring
+import gpgme
+try:
+    from io import BytesIO
+except ImportError:
+    from StringIO import StringIO as BytesIO
 
 
 log = logging.getLogger()
+
+
+_gpghome = tempfile.mkdtemp(prefix='tmp.gpghome')
+def set_up_temp_dir():
+    os.environ['GNUPGHOME'] = _gpghome
+    # Copy secrets from .gnupg to temporary dir
+    try:
+        from_ = os.environ['HOME'] + '/.gnupg/gpg.conf'
+        to_ = _gpghome
+        shutil.copy(from_, to_)
+        log.debug('copied your gpg.conf from %s to %s', from_, to_)
+    except IOError as e:
+        log.error('User has no gpg.conf file')
+
+def remove_temp_dir():
+    del os.environ['GNUPGHOME']
+    shutil.rmtree(_gpghome, ignore_errors=True)
+
+
+
+def UIDExport_gpgme(uid, keydata):
+    set_up_temp_dir()
+
+    ctx = gpgme.Context()
+    # XXX: do we need to set a "always-trust" flag ?
+    data = BytesIO(keydata)
+    result = ctx.import_(data)
+    # check if import key had succes; no error is thrown by gpgme if wrong keydata
+    assert result.considered == 1, "Key for uid %s was not correctly imported" % (uid,)
+    assert result.imported == 1, "Key for uid %s was not correctly imported" % (uid,)
+    assert len(result.imports) == 1, "Key for uid %s was not correctly imported" % (uid,)
+
+    keys = [key for key in ctx.keylist(uid)]
+    for key in keys:
+        for u in key.uids:
+            # XXX: at this moment I don't know a way to delete other UIDs from the key
+            # so in the end we have only the uid that must be signed
+            if u != uid:
+                log.info('Deleting UID %s from key %s', u.uid, key.subkeys[0].fpr)
+                try:
+                    key.uids.remove(u)
+                except ValueError as err:
+                    log.error("Couldn't delete UID %s from key %s", u.uid, key.subkeys[0].fpr)
+
+    keydata = BytesIO()
+    ctx.export(uid, keydata)
+
+    remove_temp_dir()
+    return keydata.getvalue()
+
+
 
 ### From Sections.py ###
 
