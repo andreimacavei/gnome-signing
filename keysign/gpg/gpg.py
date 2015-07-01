@@ -47,11 +47,7 @@ def UIDExport_gpgme(uid, keydata):
         result = ctx.import_(data)
     except gpgme.GpgmeError as err:
         log.error("Couldn't import the key with the following keydata:\n%s", keydata)
-        return None
-
-    assert result.considered == 1, "Key for uid %s was not correctly imported" % (uid,)
-    assert result.imported == 1, "Key for uid %s was not correctly imported" % (uid,)
-    assert len(result.imports) == 1, "Key for uid %s was not correctly imported" % (uid,)
+        raise ValueError('Invalid keydata')
 
     keys = [key for key in ctx.keylist(uid)]
     for key in keys:

@@ -59,6 +59,7 @@ def get_key(context, fpr):
         key = context.get_key(fpr)
     except gpgme.GpgmeError as err:
         log.error('No key found with fpr %s', fpr)
+        raise ValueError('Invalid fingerprint')
 
     return key
 
