@@ -50,7 +50,7 @@ def export_key(context, fpr, armor=True):
     context.armor = armor
     keydata = BytesIO()
     context.export(fpr, keydata)
-    return keydata
+    return keydata.getvalue()
 
 
 def get_key(context, fpr):
@@ -64,7 +64,7 @@ def get_key(context, fpr):
     return key
 
 
-def get_keylist(context, keyid = None, secret = False):
+def get_keys_iterator(context, keyid = None, secret = False):
     keys = [key for key in context.keylist(keyid, secret)]
     return keys
 
