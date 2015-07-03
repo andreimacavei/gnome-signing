@@ -6,3 +6,10 @@ msginit --input=gnome-keysign.pot --locale=xx_XX
 And replace 'xx_XX' with your locale (i.e: en_EN for English).
 After this  '.po' file is generated for your language and you can translate the strings in it.
 The app then must be re-build to include the new translations.
+
+
+If you change the strings in the code than you have to re-generate the .pot file before
+calling the above method. To do that use:
+
+xgettext --language=Python --keyword=_ --output=po/gnome-keysign.pot `find . -name "*.py"`
+
