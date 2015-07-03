@@ -28,7 +28,13 @@ if lc:
 languages += DEFAULT_LANGUAGES
 mo_location = LOCALE_DIR
 
-gettext.install(True, localedir=None, unicode=1)
+kwargs = {}
+if sys.version_info[0] < 3:
+    # This matches the default behavior under Python 3, although
+    # that keyword argument is not present in the Python 3 API.
+    kwargs['unicode'] = True
+
+gettext.install(APP_NAME, **kwargs)
 
 gettext.find(APP_NAME, mo_location)
 
