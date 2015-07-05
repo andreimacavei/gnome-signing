@@ -134,7 +134,7 @@ class KeyringGPG:
         return key
 
 
-    def get_keys_iterator(self, keyid = None, secret = False):
+    def get_keylist(self, keyid = None, secret = False):
         keys = [key for key in context.keylist(keyid, secret)]
         return keys
 
