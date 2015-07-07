@@ -74,6 +74,8 @@ class KeyringGPG:
     gpg calls because normal inheritance isn't possible.
     """
 
+    default_gpghome = os.environ['HOME'] + '/.gnupg/'
+
     def __init__(self, tmphome = True):
         self.log = logging.getLogger()
         self._gpghome = None
