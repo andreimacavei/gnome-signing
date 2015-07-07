@@ -41,7 +41,8 @@ def copy_secrets():
 
 
 def extract_fpr(gpgmeContext, keyid):
-    # Extracts the fingerprint from a key with id: keyid
+    """Extracts the fingerprint of a key with @keyid.
+    """
     try:
         key = gpgmeContext.get_key(keyid)
     except gpgme.GpgmeError as err:
@@ -53,6 +54,9 @@ def extract_fpr(gpgmeContext, keyid):
 
 
 def extract_keydata(gpgmeContext, fpr, armor=False):
+    """Extracts key data from a key with fingerprint @fpr.
+    Returns the data in plaintext (if armor=True) or binary.
+    """
     gpgmeContext.armor = armor
     keydata = BytesIO()
     gpgmeContext.export(fpr, keydata)
