@@ -88,7 +88,7 @@ class KeyringGPG:
 
 
     def __del__(self):
-        if self._gpghome:
+        if self._gpghome and not self._gpghome.startswith(default_gpghome):
             del os.environ['GNUPGHOME']
             shutil.rmtree(self._gpghome, ignore_errors=True)
 
