@@ -49,6 +49,11 @@ from gi.repository import GdkX11
 # Needed for window.get_xid(), xvimagesink.set_window_handle(), respectively:
 from gi.repository import GstVideo
 
+import gpgme
+try:
+    from io import BytesIO
+except ImportError:
+    from StringIO import StringIO as BytesIO
 
 Gst.init([])
 
@@ -91,7 +96,7 @@ class KeySignSection(Gtk.VBox):
 
         self.app = app
         self.log = logging.getLogger()
-        self.keyring = GetNewKeyring()
+        self.ctx = gpgme.Context()
 
         # these are needed later when we need to get details about
         # a selected key
@@ -145,12 +150,14 @@ class KeySignSection(Gtk.VBox):
         '''
         self.log.info('User selected key %s', keyid)
 
-        key = self.keyring.get_keys(keyid).values()[0]
+        key = self.ctx.get_key(keyid)
+        fpr = key.subkeys[0].fpr
 
-        keyid = key.keyid()
-        fpr = key.fpr
-        self.keyring.export_data(fpr, secret=False)
-        keydata = self.keyring.context.stdout
+        export_data = BytesIO()
+        self.ctx.armor = True
+
+        self.ctx.export(fpr, export_data)
+        keydata = export_data.getvalue()
 
         self.log.debug("Keyserver switched on! Serving key with fpr: %s", fpr)
         self.app.setup_server(keydata, fpr)

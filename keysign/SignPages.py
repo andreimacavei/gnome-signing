@@ -116,10 +116,10 @@ class KeyPresentPage(Gtk.HBox):
             self.setup_fingerprint_widget(self.fpr)
 
 
-    def display_fingerprint_qr_page(self, openPgpKey=None):
-        assert openPgpKey or self.fpr
+    def display_fingerprint_qr_page(self, gpgmeKey=None):
+        assert gpgmeKey or self.fpr
 
-        rawfpr = openPgpKey.fpr if openPgpKey else self.fpr
+        rawfpr = gpgmeKey.subkeys[0].fpr if gpgmeKey else self.fpr
         self.fpr = rawfpr
         self.setup_fingerprint_widget(self.fpr)
 
