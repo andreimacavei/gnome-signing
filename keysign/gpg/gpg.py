@@ -40,6 +40,25 @@ def copy_secrets():
         log.error('User has no gpg.conf file')
 
 
+def extract_fpr(gpgmeContext, keyid):
+    # Extracts the fingerprint from a key with id: keyid
+    try:
+        key = gpgmeContext.get_key(keyid)
+    except gpgme.GpgmeError as err:
+        log.error('No key found with id: %s', keyid)
+        raise ValueError("Invalid keyid")
+
+    # A gpgme.Key object doesn't have a fpr but a gpgme.Subkey does
+    return key.subkeys[0].fpr
+
+
+def extract_keydata(gpgmeContext, fpr, armor=False):
+    gpgmeContext.armor = armor
+    keydata = BytesIO()
+    gpgmeContext.export(fpr, keydata)
+    return keydata.getvalue()
+
+
 def UIDExport_gpgme(uid, keydata):
     set_up_temp_dir()
 
