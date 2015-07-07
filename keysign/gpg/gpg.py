@@ -29,7 +29,11 @@ def set_up_temp_dir():
 def remove_temp_dir():
     """Removes the directory for gnugp home
     """
-    del os.environ['GNUPGHOME']
+    try:
+        del os.environ['GNUPGHOME']
+    except KeyError as err:
+        log.error("'GNUPGHOME key not set.'")
+        return
     shutil.rmtree(_gpghome, ignore_errors=True)
 
 
