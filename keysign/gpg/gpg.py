@@ -70,8 +70,8 @@ def UIDExport_gpgme(uid, keydata):
 class KeyringGPG:
     """A class that has the functionalities of a keyring
 
-    It aggregates a gpgme.Context object through which executes
-    gpg calls because normal inheritance isn't possible.
+    It aggregates a gpgme.Context object through which executes gpg calls.
+    Aggregation is used because normal inheritance isn't possible.
     """
 
     default_gpghome = os.environ['HOME'] + '/.gnupg/'
