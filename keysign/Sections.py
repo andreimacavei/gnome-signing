@@ -30,6 +30,7 @@ from requests.exceptions import ConnectionError
 import sys
 
 from monkeysign.ui import MonkeysignUi
+from keysign.gpg import gpg
 from keysign.gpg.gpg import UIDExport, MinimalExport, GetNewKeyring, GetNewTempKeyring, TempKeyringCopy
 from keysign.gpg.gpg import UIDExport_gpgme
 
@@ -150,27 +151,22 @@ class KeySignSection(Gtk.VBox):
         '''
         self.log.info('User selected key %s', keyid)
 
-        key = self.ctx.get_key(keyid)
-        fpr = key.subkeys[0].fpr
+        fpr = gpg.extract_fpr(self.ctx, keyid)
 
-        export_data = BytesIO()
-        self.ctx.armor = True
-
-        self.ctx.export(fpr, export_data)
-        keydata = export_data.getvalue()
+        keydata = gpg.extract_keydata(self.ctx, fpr, True)
 
         self.log.debug("Keyserver switched on! Serving key with fpr: %s", fpr)
         self.app.setup_server(keydata, fpr)
 
-        self.switch_to_key_present_page(key)
+        self.switch_to_key_present_page(fpr)
 
 
-    def switch_to_key_present_page(self, key):
+    def switch_to_key_present_page(self, fpr):
         '''This switches the notebook to the page which
         presents the information that is needed to securely
         transfer the keydata, i.e. the fingerprint and its barcode.
         '''
-        self.keyPresentPage.display_fingerprint_qr_page(key)
+        self.keyPresentPage.display_fingerprint_qr_page(fpr)
         self.notebook.next_page()
         # This is more of a crude hack. Once the next page is presented,
         # the back button has the focus. This is not desirable because
