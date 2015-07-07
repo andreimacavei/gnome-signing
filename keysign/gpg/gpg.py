@@ -21,10 +21,14 @@ log = logging.getLogger()
 
 _gpghome = tempfile.mkdtemp(prefix='tmp.gpghome')
 def set_up_temp_dir():
+    """Sets up a temporary directory as gnupg home
+    """
     os.environ['GNUPGHOME'] = _gpghome
 
 
 def remove_temp_dir():
+    """Removes the directory for gnugp home
+    """
     del os.environ['GNUPGHOME']
     shutil.rmtree(_gpghome, ignore_errors=True)
 
