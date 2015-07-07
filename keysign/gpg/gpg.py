@@ -22,6 +22,14 @@ log = logging.getLogger()
 _gpghome = tempfile.mkdtemp(prefix='tmp.gpghome')
 def set_up_temp_dir():
     os.environ['GNUPGHOME'] = _gpghome
+
+
+def remove_temp_dir():
+    del os.environ['GNUPGHOME']
+    shutil.rmtree(_gpghome, ignore_errors=True)
+
+
+def copy_secrets():
     # Copy secrets from .gnupg to temporary dir
     try:
         from_ = os.environ['HOME'] + '/.gnupg/gpg.conf'
@@ -30,11 +38,6 @@ def set_up_temp_dir():
         log.debug('copied your gpg.conf from %s to %s', from_, to_)
     except IOError as e:
         log.error('User has no gpg.conf file')
-
-def remove_temp_dir():
-    del os.environ['GNUPGHOME']
-    shutil.rmtree(_gpghome, ignore_errors=True)
-
 
 
 def UIDExport_gpgme(uid, keydata):
