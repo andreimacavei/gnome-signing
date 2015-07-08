@@ -18,8 +18,9 @@ except ImportError:
 
 log = logging.getLogger()
 
-
+orig_gpghome = os.environ['HOME'] + '/.gnupg/'
 _gpghome = tempfile.mkdtemp(prefix='tmp.gpghome')
+
 def set_up_temp_dir():
     """Sets up a temporary directory as gnupg home
     """
@@ -37,15 +38,44 @@ def remove_temp_dir():
     shutil.rmtree(_gpghome, ignore_errors=True)
 
 
-def copy_secrets():
-    # Copy secrets from .gnupg to temporary dir
+def copy_secrets(gpgmeContext):
+    """Copies secrets from .gnupg to temporary dir
+    """
     try:
-        from_ = os.environ['HOME'] + '/.gnupg/gpg.conf'
+        from_ = orig_gpghome + 'gpg.conf'
         to_ = _gpghome
         shutil.copy(from_, to_)
         log.debug('copied your gpg.conf from %s to %s', from_, to_)
     except IOError as e:
         log.error('User has no gpg.conf file')
+
+    # Copy the public parts of the secret keys to the tmpkeyring
+    secret_keys = [key for key in gpgmeContext.keylist(None, True)]
+
+    gpgtemp = _gpghome
+    for key in secret_keys:
+        if not key.revoked and not key.expired and not key.invalid and not key.subkeys[0].disabled:
+            import_key_to_tmp(gpgmeContext, key, gpgtemp)
+
+
+def import_key_to_tmp(gpgmeContext, gpgmeKey, gpghome):
+    """Imports a key into a temporary keyring.
+
+    Note that in gpgme, after you change the default gpg homedir, all
+    new and old context objects will use that new dir as their gpg homedir.
+    """
+    keydata = extract_keydata(gpgmeContext, gpgmeKey.subkeys[0].fpr)
+
+    os.environ['GNUPGHOME'] = gpghome
+    ctx = gpgme.Context()
+    # GPGME works with file descriptors, not the actual text of data
+    fp = BytesIO(keydata)
+    res = ctx.import_(fp)
+
+    # Reset gpg home to original
+    os.environ['GNUPGHOME'] = orig_gpghome
+    return res
+
 
 
 def extract_fpr(gpgmeContext, keyid):
