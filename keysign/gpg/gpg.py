@@ -7,13 +7,12 @@ import os
 import shutil
 import tempfile
 from tempfile import NamedTemporaryFile
+from distutils.spawn import find_executable
 
 from monkeysign.gpg import Keyring, TempKeyring
 import gpgme
-try:
-    from io import BytesIO
-except ImportError:
-    from StringIO import StringIO as BytesIO
+from io import BytesIO
+from StringIO import StringIO
 
 
 log = logging.getLogger()
@@ -55,27 +54,28 @@ def copy_secrets(gpgmeContext):
     gpgtemp = _gpghome
     for key in secret_keys:
         if not key.revoked and not key.expired and not key.invalid and not key.subkeys[0].disabled:
-            import_key_to_tmp(gpgmeContext, key, gpgtemp)
+            import_key_to_tmpdir(gpgmeContext, key.subkeys[0].fpr, gpgtemp)
 
 
-def import_key_to_tmp(gpgmeContext, gpgmeKey, gpghome):
+def import_key_to_tmpdir(gpgmeContext, fpr, gpghome):
     """Imports a key into a temporary keyring.
 
-    Note that in gpgme, after you change the default gpg homedir, all
-    new and old context objects will use that new dir as their gpg homedir.
+    It uses Context.set_engine_info() to restrict the change of gpg
+    directory to current context, elsewhere it would change it globally
+    through os.environ['GNUPGHOME']
     """
-    keydata = extract_keydata(gpgmeContext, gpgmeKey.subkeys[0].fpr)
+    gpg_path = find_executable('gpg')
 
-    os.environ['GNUPGHOME'] = gpghome
-    ctx = gpgme.Context()
-    # GPGME works with file descriptors, not the actual text of data
-    fp = BytesIO(keydata)
-    res = ctx.import_(fp)
+    tmp_ctx = gpgme.Context()
+    tmp_ctx.set_engine_info(gpgme.PROTOCOL_OpenPGP, gpg_path, gpghome)
 
-    # Reset gpg home to original
-    os.environ['GNUPGHOME'] = orig_gpghome
-    return res
+    keydata = extract_keydata(gpgmeContext, fpr, True)
 
+    # It seems that keys can be imported through string streams only
+    keydataIO = StringIO(keydata)
+    res = ctx.import_(keydataIO)
+
+    return len(res.imports) != 0
 
 
 def extract_fpr(gpgmeContext, keyid):
