@@ -21,15 +21,18 @@ orig_gpghome = os.environ['HOME'] + '/.gnupg/'
 _gpghome = tempfile.mkdtemp(prefix='tmp.gpghome')
 
 
-def set_up_temp_dir(gpgmeContext, temp_dir=tempfile.mkdtemp(prefix='tmp.gpghome')):
+def gpg_set_dir(gpgmeContext, dir_prefix=None):
     """Sets up a temporary directory as new gnupg home
     for this context
     """
+    dir_prefix = dir_prefix if dir_prefix else 'tmp.gpghome'
+    temp_dir = tempfile.mkdtemp(prefix=dir_prefix)
+
     gpg_path = find_executable('gpg')
     gpgmeContext.set_engine_info(gpgme.PROTOCOL_OpenPGP, gpg_path, temp_dir)
 
 
-def reset_gpg_dir(gpgmeContext):
+def gpg_reset_dir(gpgmeContext):
     """Resets the gnupg dir to its default location
     for current context
     """
