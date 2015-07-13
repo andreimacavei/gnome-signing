@@ -29,15 +29,14 @@ def set_up_temp_dir(gpgmeContext, temp_dir=tempfile.mkdtemp(prefix='tmp.gpghome'
     gpgmeContext.set_engine_info(gpgme.PROTOCOL_OpenPGP, gpg_path, temp_dir)
 
 
-def remove_temp_dir():
-    """Removes the directory for gnugp home
+def reset_gpg_dir(gpgmeContext):
+    """Resets the gnupg dir to its default location
+    for current context
     """
-    try:
-        del os.environ['GNUPGHOME']
-    except KeyError as err:
-        log.error("'GNUPGHOME key not set.'")
-        return
-    shutil.rmtree(_gpghome, ignore_errors=True)
+    default_gpghome = os.environ['HOME'] + '/.gnupg/'
+    gpg_path = find_executable('gpg')
+
+    gpgmeContext.set_engine_info(gpgme.PROTOCOL_OpenPGP, gpg_path, default_gpghome)
 
 
 def copy_secrets(gpgmeContext):
