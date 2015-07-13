@@ -20,10 +20,13 @@ log = logging.getLogger()
 orig_gpghome = os.environ['HOME'] + '/.gnupg/'
 _gpghome = tempfile.mkdtemp(prefix='tmp.gpghome')
 
-def set_up_temp_dir():
-    """Sets up a temporary directory as gnupg home
+
+def set_up_temp_dir(gpgmeContext, temp_dir=tempfile.mkdtemp(prefix='tmp.gpghome')):
+    """Sets up a temporary directory as new gnupg home
+    for this context
     """
-    os.environ['GNUPGHOME'] = _gpghome
+    gpg_path = find_executable('gpg')
+    gpgmeContext.set_engine_info(gpgme.PROTOCOL_OpenPGP, gpg_path, temp_dir)
 
 
 def remove_temp_dir():
