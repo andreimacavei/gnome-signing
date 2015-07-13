@@ -54,16 +54,17 @@ def copy_secrets(gpgmeContext):
     gpgtemp = _gpghome
     for key in secret_keys:
         if not key.revoked and not key.expired and not key.invalid and not key.subkeys[0].disabled:
-            import_key_to_tmpdir(gpgmeContext, key.subkeys[0].fpr, gpgtemp)
+            import_key_by_fpr(gpgmeContext, key.subkeys[0].fpr, gpgtemp)
 
 
-def import_key_to_tmpdir(gpgmeContext, fpr, new_homedir):
+def import_key_by_fpr(gpgmeContext, fpr, new_homedir=None):
     """Imports a key into a temporary keyring.
 
     It uses Context.set_engine_info() to restrict the change of gpg
     directory to current context, elsewhere it would change it globally
     through os.environ['GNUPGHOME']
     """
+    new_homedir = new_homedir if new_homedir else tempfile.mkdtemp(prefix='tmp.gpghome')
     gpg_path = find_executable('gpg')
 
     # The default context has access to user's default keyring
@@ -72,7 +73,7 @@ def import_key_to_tmpdir(gpgmeContext, fpr, new_homedir):
     # It seems that keys can be imported from string streams only
     keydataIO = StringIO(keydata)
 
-    gpgmeContext.set_engine_info(gpgme.PROTOCOL_OpenPGP, gpg_path, gpghome)
+    gpgmeContext.set_engine_info(gpgme.PROTOCOL_OpenPGP, gpg_path, new_homedir)
     res = gpgmeContext.import_(keydataIO)
 
     return len(res.imports) != 0
