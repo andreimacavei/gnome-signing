@@ -217,6 +217,7 @@ class GetKeySection(Gtk.VBox):
 
         # the temporary keyring we operate in
         self.tmpkeyring = None
+        self.ctx = None
 
         self.scanPage = ScanFingerprintPage()
         self.signPage = SignKeyPage()
@@ -352,6 +353,10 @@ class GetKeySection(Gtk.VBox):
         #FIXME: should we create a new TempKeyring for each key we want
         # to sign it ?
         self.tmpkeyring = GetNewTempKeyring()
+        # For each key downloaded we create a new gpgme.Context object and
+        # set up a temporary dir for gpg
+        self.ctx = gpgme.Context()
+        gpg.gpg_set_dir(self.ctx)
 
         other_clients = self.sort_clients(other_clients, fingerprint)
 
