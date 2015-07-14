@@ -84,6 +84,22 @@ def import_key_by_fpr(gpgmeContext, fpr, new_homedir=None):
     return len(res.imports) != 0
 
 
+def gpg_import_keydata(gpgmeContext, keydata):
+    """Tries to import a OpenPGP key from @keydata
+
+    The @gpgmeContext object has a gpg directory already set.
+    """
+    keydataIO = StringIO(keydata)
+    try:
+        result = gpgmeContext.import_(keydataIO)
+    except gpgme.GpgmeError as err:
+        log.error("Couldn't import the key with the following keydata:\n%s", keydataIO.getvalue())
+        return False
+    # XXX: we stick to return True/False for compatibility issues.
+    # The gpgme.ImportResult can be used to extract more information.
+    return True
+
+
 def extract_fpr(gpgmeContext, keyid):
     """Extracts the fingerprint of a key with @keyid.
     """
