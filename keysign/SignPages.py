@@ -317,11 +317,11 @@ class SignKeyPage(Gtk.VBox):
         self.pack_start(self.mainLabel, False, False, 0)
 
 
-    def display_downloaded_key(self, key, scanned_fpr):
+    def display_downloaded_key(self, formatted_key):
 
         # FIXME: If the two fingerprints don't match, the button
         # should be disabled
-        key_text = GLib.markup_escape_text(str(key))
+        key_text = GLib.markup_escape_text(str(formatted_key))
 
         markup = """\
 
