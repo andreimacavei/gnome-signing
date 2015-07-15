@@ -135,6 +135,47 @@ def extract_keydata(gpgmeContext, fpr, armor=False):
     return keydata.getvalue()
 
 
+def format_fpr(fpr):
+    """display a clean version of the fingerprint
+
+    this is the display we usually see
+    """
+    l = list(fpr) # explode
+    s = ''
+    for i in range(10):
+        # output 4 chars
+        s += ''.join(l[4*i:4*i+4])
+        # add a space, except at the end
+        if i < 9: s += ' '
+        # add an extra space in the middle
+        if i == 4: s += ' '
+    return s
+
+
+def gpg_format_key(gpgmeKey):
+    """Returns a string representation of @gpgmeKey
+
+    It contains info about: length of key, keyid, expiration date, creation date,
+    fingerprint, uids and subkeys.
+    """
+    subkey = gpgmeKey.subkeys[0]
+
+    ret = u'pub  %sR/%s' % (subkey.length, subkey.fpr[-8:])
+    ret += u' %s' % (subkey.timestamp, )
+    if subkey.expires: ret += u' [expires: %s]' % (subkey.expires,)
+    ret += '\n'
+    ret += u'    Fingerprint = %s\n' % (format_fpr(subkey.fpr),)
+    i = 1
+    for uid in gpgmeKey.uids:
+        ret += u"uid %d      %s\n" % (i, uid.uid.decode('utf8'))
+        i += 1
+    for sk in gpgmeKey.subkeys:
+        if not sk.fpr.startswith(subkey.fpr):
+            ret += u"sub   %sR/%s %s" % (sk.length, sk.fpr[-8:], sk.timestamp)
+            if sk.expires: ret += u' [expires: %s]\n' % (sk.expires,)
+    return ret
+
+
 def UIDExport_gpgme(uid, keydata):
     set_up_temp_dir()
 
