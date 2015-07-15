@@ -103,6 +103,15 @@ def gpg_import_keydata(gpgmeContext, keydata):
     return True
 
 
+def gpg_get_keylist(gpgmeContext, keyid=None, secret=False):
+    """Returns the keys found in @gpgmeContext
+    If @keyid is None then all geys will be returned.
+    If @secret=True then it will return the secret keys.
+    """
+    keys = [key for key in gpgmeContext.keylist(keyid, secret)]
+    return keys
+
+
 def extract_fpr(gpgmeContext, keyid):
     """Extracts the fingerprint of a key with @keyid.
     """

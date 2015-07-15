@@ -330,7 +330,7 @@ class GetKeySection(Gtk.VBox):
         self.tmpkeyring.import_data(downloaded_data)
 
         if gpg.gpg_import_keydata(self.ctx, downloaded_data):
-            imported_key_fpr = self.tmpkeyring.get_keys().keys()[0]
+            imported_key_fpr = gpg.gpg_get_keylist(self.ctx, None, False)[0].subkeys[0].fpr
             if imported_key_fpr == fingerprint:
                 result = True
             else:
