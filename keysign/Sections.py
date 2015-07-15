@@ -326,7 +326,10 @@ class GetKeySection(Gtk.VBox):
 
     def verify_downloaded_key(self, downloaded_data, fingerprint):
         # FIXME: implement a better and more secure way to verify the key
-        if self.tmpkeyring.import_data(downloaded_data):
+        # FIXME2: We keep the calls to old API until we replaced it entirely
+        self.tmpkeyring.import_data(downloaded_data)
+
+        if gpg.gpg_import_keydata(self.ctx, downloaded_data):
             imported_key_fpr = self.tmpkeyring.get_keys().keys()[0]
             if imported_key_fpr == fingerprint:
                 result = True
