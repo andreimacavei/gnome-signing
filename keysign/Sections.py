@@ -31,8 +31,9 @@ import sys
 
 from monkeysign.ui import MonkeysignUi
 from keysign.gpg import gpg
-from keysign.gpg.gpg import UIDExport, MinimalExport, GetNewKeyring, GetNewTempKeyring, TempKeyringCopy
 from keysign.gpg.gpg import UIDExport_gpgme
+from keysign.gpg.gpg import UIDExport, MinimalExport, GetNewKeyring, TempKeyringCopy
+
 
 from compat import gtkbutton
 import Keyserver
@@ -326,9 +327,6 @@ class GetKeySection(Gtk.VBox):
 
     def verify_downloaded_key(self, downloaded_data, fingerprint):
         # FIXME: implement a better and more secure way to verify the key
-        # FIXME2: We keep the calls to old API until we replaced it entirely
-        self.tmpkeyring.import_data(downloaded_data)
-
         if gpg.gpg_import_keydata(self.ctx, downloaded_data):
             imported_key_fpr = gpg.gpg_get_keylist(self.ctx, None, False)[0].subkeys[0].fpr
             if imported_key_fpr == fingerprint:
@@ -353,9 +351,6 @@ class GetKeySection(Gtk.VBox):
         other_clients = self.app.discovered_services
         self.log.debug("The clients found on the network: %s", other_clients)
 
-        #FIXME: should we create a new TempKeyring for each key we want
-        # to sign it ?
-        self.tmpkeyring = GetNewTempKeyring()
         # For each key downloaded we create a new gpgme.Context object and
         # set up a temporary dir for gpg
         self.ctx = gpgme.Context()
