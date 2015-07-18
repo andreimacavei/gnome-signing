@@ -17,69 +17,65 @@ from StringIO import StringIO
 
 log = logging.getLogger()
 
-orig_gpghome = os.environ['HOME'] + '/.gnupg/'
-_gpghome = tempfile.mkdtemp(prefix='tmp.gpghome')
+gpg_default = os.environ['HOME'] + '/.gnupg/'
+gpg_path = find_executable('gpg')
 
 
-def gpg_set_dir(gpgmeContext, dir_prefix=None):
+def gpg_set_engine(gpgmeContext, protocol=gpgme.PROTOCOL_OpenPGP, dir_prefix=None):
     """Sets up a temporary directory as new gnupg home
     for this context
     """
     dir_prefix = dir_prefix if dir_prefix else 'tmp.gpghome'
     temp_dir = tempfile.mkdtemp(prefix=dir_prefix)
+    gpgmeContext.set_engine_info(protocol, gpg_path, temp_dir)
+    return temp_dir
 
-    gpg_path = find_executable('gpg')
-    gpgmeContext.set_engine_info(gpgme.PROTOCOL_OpenPGP, gpg_path, temp_dir)
 
-
-def gpg_reset_dir(gpgmeContext):
+def gpg_reset_engine(gpgmeContext, protocol=gpgme.PROTOCOL_OpenPGP):
     """Resets the gnupg dir to its default location
     for current context
     """
-    default_gpghome = os.environ['HOME'] + '/.gnupg/'
-    gpg_path = find_executable('gpg')
-
-    gpgmeContext.set_engine_info(gpgme.PROTOCOL_OpenPGP, gpg_path, default_gpghome)
+    gpgmeContext.set_engine_info(protocol, gpg_path, gpg_default)
 
 
-def copy_secrets(gpgmeContext):
-    """Copies secrets from .gnupg to temporary dir
+def gpg_copy_secrets(gpgmeContext, gpg_homedir):
+    """Copies secrets from .gnupg to new @gpg_homedir
     """
+    ctx = gpgme.Context()
+
     try:
-        from_ = orig_gpghome + 'gpg.conf'
-        to_ = _gpghome
+        from_ = gpg_default + 'gpg.conf'
+        to_ = gpg_homedir
         shutil.copy(from_, to_)
         log.debug('copied your gpg.conf from %s to %s', from_, to_)
     except IOError as e:
         log.error('User has no gpg.conf file')
 
-    # Copy the public parts of the secret keys to the tmpkeyring
-    secret_keys = [key for key in gpgmeContext.keylist(None, True)]
+    secret_keys = [key for key in ctx.keylist(None, True)]
+    # We set again the gpg homedir because there is no contex method "get_engine_info"
+    # to tell us what gpg home it uses.
+    gpgmeContext.set_engine_info(gpgme.PROTOCOL_OpenPGP, gpg_path, gpg_homedir)
 
-    gpgtemp = _gpghome
     for key in secret_keys:
         if not key.revoked and not key.expired and not key.invalid and not key.subkeys[0].disabled:
-            import_key_by_fpr(gpgmeContext, key.subkeys[0].fpr, gpgtemp)
+            gpg_import_key_by_fpr(gpgmeContext, key.subkeys[0].fpr)
 
 
-def import_key_by_fpr(gpgmeContext, fpr, new_homedir=None):
-    """Imports a key into a temporary keyring.
+def gpg_import_key_by_fpr(gpgmeContext, fpr):
+    """Imports a key received by its @fpr into a temporary keyring.
 
-    It uses Context.set_engine_info() to restrict the change of gpg
-    directory to current context, elsewhere it would change it globally
-    through os.environ['GNUPGHOME']
+    It assumes that the received @gpgmeContext has its gpg homedir set already.
     """
-    new_homedir = new_homedir if new_homedir else tempfile.mkdtemp(prefix='tmp.gpghome')
-    gpg_path = find_executable('gpg')
-
-    # The default context has access to user's default keyring
+    # We make a new context because we need to get the key from it
     ctx = gpgme.Context()
     keydata = extract_keydata(ctx, fpr, True)
     # It seems that keys can be imported from string streams only
     keydataIO = StringIO(keydata)
-
-    gpgmeContext.set_engine_info(gpgme.PROTOCOL_OpenPGP, gpg_path, new_homedir)
-    res = gpgmeContext.import_(keydataIO)
+    try:
+        res = gpgmeContext.import_(keydataIO)
+    except gpgme.GpgmeError as err:
+        log.error("No key found in user's keyring with fpr:\n%s", fpr)
+        raise ValueError('Invalid fingerprint')
 
     return len(res.imports) != 0
 
@@ -130,7 +126,7 @@ def extract_keydata(gpgmeContext, fpr, armor=False):
     Returns the data in plaintext (if armor=True) or binary.
     """
     gpgmeContext.armor = armor
-    keydata = BytesIO()
+    keydata = StringIO()
     gpgmeContext.export(fpr, keydata)
     return keydata.getvalue()
 
@@ -432,5 +428,12 @@ def keyring_get_keys(keyring, keyid=None):
 
 
 if __name__ == '__main__':
-    keyring = GetNewKeyring()
-    print keyring.get_keys()
+    ctx = gpgme.Context()
+    gpghome = gpg_set_engine(ctx)
+    gpg_copy_secrets(ctx, gpghome)
+
+    keys = gpg_get_keylist(ctx)
+    for key in keys:
+        key_str = gpg_format_key(key)
+        print ("\nKey: \n%s") %(key_str,)
+

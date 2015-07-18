@@ -354,7 +354,7 @@ class GetKeySection(Gtk.VBox):
         # For each key downloaded we create a new gpgme.Context object and
         # set up a temporary dir for gpg
         self.ctx = gpgme.Context()
-        gpg.gpg_set_dir(self.ctx)
+        gpg.gpg_set_engine(self.ctx)
 
         other_clients = self.sort_clients(other_clients, fingerprint)
 
