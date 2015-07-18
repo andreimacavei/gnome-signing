@@ -6,7 +6,6 @@ from string import Template
 import os
 import shutil
 import tempfile
-from tempfile import NamedTemporaryFile
 from distutils.spawn import find_executable
 
 from monkeysign.gpg import Keyring, TempKeyring
@@ -202,82 +201,8 @@ def UIDExport_gpgme(uid, keydata):
     remove_temp_dir()
     return keydata.getvalue()
 
-class KeyringGPG:
-    """A class that has the functionalities of a keyring
 
-    It aggregates a gpgme.Context object through which executes gpg calls.
-    Aggregation is used because normal inheritance isn't possible.
-    """
-
-    default_gpghome = os.environ['HOME'] + '/.gnupg/'
-
-    def __init__(self, tmphome = True):
-        self.log = logging.getLogger()
-        self._gpghome = None
-
-        if tmphome:
-            self._gpghome = tempfile.mkdtemp(prefix='tmp.gpghome')
-            self.set_up_tmp_dir()
-
-        self.ctx = gpgme.Context()
-
-
-    def __del__(self):
-        if self._gpghome and not self._gpghome.startswith(default_gpghome):
-            del os.environ['GNUPGHOME']
-            shutil.rmtree(self._gpghome, ignore_errors=True)
-
-
-    def set_up_tmp_dir(self):
-        os.environ['GNUPGHOME'] = self._gpghome
-        # Copy secrets from .gnupg to temporary dir
-        try:
-            from_ = os.environ['HOME'] + '/.gnupg/gpg.conf'
-            to_ = self._gpghome
-            shutil.copy(from_, to_)
-            self.log.debug('copied your gpg.conf from %s to %s', from_, to_)
-        except IOError as e:
-            self.log.error('User has no gpg.conf file')
-
-
-    def import_data(self, keydata):
-        data = BytesIO(keydata)
-        try:
-            result = self.ctx.import_(data)
-        except gpgme.GpgmeError as err:
-            self.log.error("Couldn't import the key with the following keydata:\n%s", keydata)
-            return False
-        # XXX: we stick to return True/False for compatibility issues.
-        # The gpgme.ImportResult can be used to extract more information.
-        return True
-
-
-    def export_data(self, fpr, armor = True):
-        self.ctx.armor = armor
-        keydata = BytesIO()
-        self.ctx.export(fpr, keydata)
-
-        return keydata.getvalue()
-
-
-    def get_key(self, fpr):
-        key = None
-        try:
-            key = self.ctx.get_key(fpr)
-        except gpgme.GpgmeError as err:
-            self.log.error('No key found with fpr %s', fpr)
-            raise ValueError('Invalid fingerprint')
-
-        return key
-
-
-    def get_keylist(self, keyid = None, secret = False):
-        keys = [key for key in context.keylist(keyid, secret)]
-        return keys
-
-
-
-### From Sections.py ###
+### Below are functions that use old API and must be replaced ###
 
 def UIDExport(uid, keydata):
     """Export only the UID of a key.
@@ -375,55 +300,6 @@ def build_command(*args, **kwargs):
     log.debug("Building cmd: %s", ' '.join(["'%s'" % c for c in ret]))
     return ret
 monkeysign.gpg.Context.build_command = build_command
-
-
-
-### Below functions represent gpg calls that mostly depend on
-### monkeysign.gpg.Keyring and monkeysign.gpg.Context classes
-
-def keyring_set_option(keyring, option, value = None):
-    try:
-        if option in keyring.context.options:
-            keyring.context.set_option(option, value)
-
-    except AttributeError:
-        log.error("Object %s has no attribute context", keyring)
-    except TypeError:
-        log.error("Object %s is not a Keyring type", keyring)
-
-
-def keyring_call_command(keyring, command, stdin = None):
-    try:
-        if option in keyring.context.options:
-            keyring.context.call_command(command, stdin)
-
-    except AttributeError:
-        log.error("Object %s has no attribute context", keyring)
-    except TypeError:
-        log.error("Object %s is not a Keyring type", keyring)
-
-
-def keyring_import_data(keyring, data):
-    if keyring.import_data(data):
-        imported_key_fpr = keyring.get_keys().keys()[0]
-        log.debug("Imported data with fpr:\n%s", imported_key_fpr)
-
-    else:
-        log.error("Couldn't import data:\n%s", data)
-
-
-def keyring_export_data(keyring, keyid):
-    keys = keyring.get_keys(keyid)
-    key = keys.values()[0]
-
-    keyring.export_data(key.fpr, secret=False)
-    keydata = keyring.context.stdout
-    return keydata
-
-
-def keyring_get_keys(keyring, keyid=None):
-    keys_dict = keyring.get_keys(keyid)
-    return keys_dict
 
 
 
