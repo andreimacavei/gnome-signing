@@ -42,14 +42,18 @@ def gpg_copy_secrets(gpgmeContext, gpg_homedir):
     """
     ctx = gpgme.Context()
 
+    secring_path = gpg_default + 'secring.gpg'
+    shutil.copy(secring_path, gpg_homedir)
+    log.debug('copied your secring.gpg from %s to %s', secring_path, gpg_homedir)
+
     try:
-        from_ = gpg_default + 'gpg.conf'
-        to_ = gpg_homedir
-        shutil.copy(from_, to_)
-        log.debug('copied your gpg.conf from %s to %s', from_, to_)
+        conf_path = gpg_default + 'gpg.conf'
+        shutil.copy(conf_path, gpg_homedir)
+        log.debug('copied your gpg.conf from %s to %s', conf_path, gpg_homedir)
     except IOError as e:
         log.error('User has no gpg.conf file')
 
+    # Imports user's private keys into the new keyring
     secret_keys = [key for key in ctx.keylist(None, True)]
     # We set again the gpg homedir because there is no contex method "get_engine_info"
     # to tell us what gpg home it uses.
