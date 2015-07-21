@@ -111,6 +111,49 @@ def gpg_get_keylist(gpgmeContext, keyid=None, secret=False):
     return keys
 
 
+def gpg_sign_uid(gpgmeContext, gpg_homedir, userId):
+    """Signs a specific uid of a OpenPGP key
+
+    @gpg_homedir is the directory that @gpgmeContext uses for gpg.
+    @userId is a gpgme.UserId object
+    """
+    # we import the user's primary key that will be used to sign
+    gpg_copy_secrets(gpgmeContext, gpg_homedir)
+    primary_key = [key for key in gpgmeContext.keylist(None, True)][0]
+    gpgmeContext.signers = [primary_key]
+
+    try:
+        uid_name, uid_email, uid_comment = userId.name, userId.email, userId.comment
+    except AttributeError as exp:
+        log.error("%s is not a valid gpgme.UserId", userId)
+        raise ValueError("Invalid UID")
+
+    # we set keylist mode so we can see signatures
+    gpgmeContext.keylist_mode = gpgme.KEYLIST_MODE_SIGS
+    key = gpgmeContext.get_key(userId.uid)
+
+    i = 1
+    # check if we didn't already signed this uid of the key
+    for uid in key.uids:
+        sigs = [sig for sig in uid.signatures if primary_key.subkeys[0].fpr.endswith(sig.keyid)]
+
+        # check if this uid is the same with the one that we want to sign
+        if (uid.name.startswith(uid_name) and uid.email.startswith(uid_email)
+                    and uid.comment.startswith(uid_comment)):
+
+            if len(sigs) == 0:
+                gpgme.editutil.edit_sign(gpgmeContext, key, index=i, check=0)
+
+            else:
+                # we already signed this UID
+                log.info("Uid %s was already signed by key: \n%s", userId.uid, key.subkeys[0].fpr)
+                return False
+            break
+        i += 1
+
+    return True
+
+
 def extract_fpr(gpgmeContext, keyid):
     """Extracts the fingerprint of a key with @keyid.
     """
