@@ -30,11 +30,13 @@ def gpg_set_engine(gpgmeContext, protocol=gpgme.PROTOCOL_OpenPGP, dir_prefix=Non
     return temp_dir
 
 
-def gpg_reset_engine(gpgmeContext, protocol=gpgme.PROTOCOL_OpenPGP):
+def gpg_reset_engine(gpgmeContext, tmp_dir=None, protocol=gpgme.PROTOCOL_OpenPGP):
     """Resets the gnupg dir to its default location
     for current context
     """
     gpgmeContext.set_engine_info(protocol, gpg_path, gpg_default)
+    if tmp_dir:
+        shutil.rmtree(tmp_dir, ignore_errors=True)
 
 
 def gpg_copy_secrets(gpgmeContext, gpg_homedir):
