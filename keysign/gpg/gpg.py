@@ -10,6 +10,7 @@ from distutils.spawn import find_executable
 
 from monkeysign.gpg import Keyring, TempKeyring
 import gpgme
+import gpgme.editutil
 from io import BytesIO
 from StringIO import StringIO
 

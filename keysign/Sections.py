@@ -31,8 +31,6 @@ import sys
 
 from monkeysign.ui import MonkeysignUi
 from keysign.gpg import gpg
-from keysign.gpg.gpg import UIDExport_gpgme
-from keysign.gpg.gpg import UIDExport, MinimalExport, GetNewKeyring, TempKeyringCopy
 
 
 from compat import gtkbutton
@@ -217,7 +215,6 @@ class GetKeySection(Gtk.VBox):
         self.log = logging.getLogger()
 
         # the temporary keyring we operate in
-        self.tmpkeyring = None
         self.ctx = None
 
         self.scanPage = ScanFingerprintPage()
@@ -392,52 +389,48 @@ class GetKeySection(Gtk.VBox):
     def sign_key_async(self, fingerprint, callback=None, data=None, error_cb=None):
         self.log.debug("I will sign key with fpr {}".format(fingerprint))
 
-        keyring = GetNewKeyring()
-        keyring.context.set_option('export-options', 'export-minimal')
+        ctx = gpgme.Context()
+        gpg_homedir = gpg.gpg_set_engine(ctx)
 
-        tmpkeyring = TempKeyringCopy(keyring)
-
-        # 1. fetch the key into a temporary keyring
-        # 1.a) from the local keyring
-        # FIXME: WTF?! How would the ring enter the keyring in first place?!
         keydata = data or self.received_key_data
-
-        if keydata:
-            stripped_key = MinimalExport(keydata)
-        else: # Do we need this branch at all?
+        # FIXME: until we have our patch to PyGPGME integrated, we cannot
+        # export the key with 'export-minimal' option
+        # stripped_key = gpg.gpg_export_minimal(ctx, keydata)
+        if not keydata:
             self.log.debug("looking for key %s in your keyring", fingerprint)
-            keyring.context.set_option('export-options', 'export-minimal')
-            stripped_key = keyring.export_data(fingerprint)
+            default_ctx = gpgme.Context()
+            keydata = gpg.extract_keydata(default_ctx, fingerprint, True)
 
-        self.log.debug('Trying to import key\n%s', stripped_key)
-        if tmpkeyring.import_data(stripped_key):
-            # 3. for every user id (or all, if -a is specified)
-            # 3.1. sign the uid, using gpg-agent
-            keys = tmpkeyring.get_keys(fingerprint)
+        # 1. Fetch the key into a temporary keyring
+        self.log.debug('Trying to import key\n%s', keydata)
+        if gpg.gpg_import_keydata(ctx, keydata):
+
+            keys = gpg.gpg_get_keylist(ctx, fingerprint)
             self.log.info("Found keys %s for fp %s", keys, fingerprint)
             assert len(keys) == 1, "We received multiple keys for fp %s: %s" % (fingerprint, keys)
-            key = keys[fingerprint]
-            uidlist = key.uidslist
 
-            # FIXME: For now, we sign all UIDs. This is bad.
-            ret = tmpkeyring.sign_key(uidlist[0].uid, signall=True)
-            self.log.info("Result of signing %s on key %s: %s", uidlist[0].uid, fingerprint, ret)
+            key = keys[0]
+            uidlist = key.uids
 
-
+            # 2. Sign each UID individually
             for uid in uidlist:
                 uid_str = uid.uid
                 self.log.info("Processing uid %s %s", uid, uid_str)
 
-                # 3.2. export and encrypt the signature
-                # 3.3. mail the key to the user
-                signed_key = UIDExport(uid_str, tmpkeyring.export_data(uid_str))
-                self.log.info("Exported %d bytes of signed key", len(signed_key))
-                # self.signui.tmpkeyring.context.set_option('armor')
-                tmpkeyring.context.set_option('always-trust')
-                encrypted_key = tmpkeyring.encrypt_data(data=signed_key, recipient=uid_str)
+                res = gpg.gpg_sign_uid(ctx, gpg_homedir, uid)
+                if not res:
+                    # we may have already signed this uid before
+                    self.log.info("Uid %s couldn't be signed. Maybe we already signed it?", uid_str)
+                    continue
 
-                keyid = str(key.keyid())
-                ctx = {
+                # 3. Export and encrypt the signature
+                signed_key = gpg.extract_keydata(ctx, fingerprint, True)
+                self.log.info("Exported %d bytes of signed key", len(signed_key))
+
+                encrypted_key = gpg.gpg_encrypt_data(ctx, signed_key, uid_str)
+
+                keyid = key.subkeys[0].fpr[-8:]
+                template_ctx = {
                     'uid' : uid_str,
                     'fingerprint': fingerprint,
                     'keyid': keyid,
@@ -459,25 +452,40 @@ class GetKeySection(Gtk.VBox):
                 # As we're done with the file, we close it.
                 #tmpfile.close()
 
-                subject = Template(SUBJECT).safe_substitute(ctx)
-                body = Template(BODY).safe_substitute(ctx)
+                # mail the key to the user
+                subject = Template(SUBJECT).safe_substitute(template_ctx)
+                body = Template(BODY).safe_substitute(template_ctx)
                 self.email_file (to=uid_str, subject=subject,
                                  body=body, files=[filename])
 
 
-            # FIXME: Can we get rid of self.tmpfiles here already? Even if the MUA is still running?
+                # we have to re-import the key to have each UID signed individually
+                try:
+                    ctx.delete(key)
+                except gpgme.GpgmeError as exp:
+                    self.log.debug('You are signing one of your own keys: %s', key.subkeys[0].fpr)
+                    ctx.delete(key, True)
 
+                gpg.gpg_import_keydata(ctx, keydata)
+                keys = gpg.gpg_get_keylist(ctx, fingerprint)
+                self.log.info("Found keys %s for fp %s", keys, fingerprint)
+                assert len(keys) == 1, "We received multiple keys for fp %s: %s" % (fingerprint, keys)
+
+                key = keys[0]
+
+            # FIXME: Can we get rid of self.tmpfiles here already? Even if the MUA is still running?
 
             # 3.4. optionnally (-l), create a local signature and import in
             # local keyring
             # 4. trash the temporary keyring
-
 
         else:
             self.log.error('data found in barcode does not match a OpenPGP fingerprint pattern: %s', fingerprint)
             if error_cb:
                 GLib.idle_add(error_cb, data)
 
+        # We are done signing the key so we remove the temporary keyring
+        gpg.gpg_reset_engine(ctx, gpg_homedir)
         return False
 
 
