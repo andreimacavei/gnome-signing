@@ -26,9 +26,10 @@ import logging
 from gi.repository import Gtk, GLib
 from gi.repository import GObject
 
-from keysign.gpg.gpg import GetNewKeyring
+import gpgme
 
 # These are relative imports
+from gpg import gpg
 from __init__ import __version__
 
 log = logging.getLogger()
@@ -71,19 +72,18 @@ class KeysPage(Gtk.VBox):
         # TreeView, i.e. in get_items_from_selection.
         self.store = Gtk.ListStore(str, str, str)
 
-        # FIXME: this should be moved to KeySignSection
-        self.keyring = GetNewKeyring() # the user's keyring
+        # XXX: maybe we can move this to KeySignSection in Sections.py
+        self.ctx = gpgme.Context()
 
         self.keysDict = {}
 
-        # FIXME: this should be a callback function to update the display
-        # when a key is changed/deleted
-        for key in self.keyring.get_keys(None, secret=True, public=show_public_keys).values():
-            if key.invalid or key.disabled or key.expired or key.revoked:
+        # FIXME: implement a callback that refreshes the UIDs when they change
+        for key in gpg.gpg_get_keylist(self.ctx, None, True):
+            if key.revoked or key.expired or key.invalid or key.subkeys[0].disabled:
                 continue
 
-            uidslist = key.uidslist #UIDs: Real Name (Comment) <email@address>
-            keyid = str(key.keyid()) # the key's short id
+            uidslist = key.uids
+            keyid = key.subkeys[0].fpr[-8:]
 
             if not keyid in self.keysDict:
                 self.keysDict[keyid] = key
@@ -178,7 +178,7 @@ class KeysPage(Gtk.VBox):
         self.emit('key-selection-changed', keyid)
 
         try:
-            exp_date = datetime.fromtimestamp(float(key.expiry))
+            exp_date = datetime.fromtimestamp(float(key.subkeys[0].expires))
             expiry = "{:%Y-%m-%d %H:%M:%S}".format(exp_date)
         except ValueError, e:
             expiry = "No expiration date"
@@ -220,7 +220,7 @@ class KeysPage(Gtk.VBox):
         to publish a key on the network.  It will emit a "key-selected"
         signal with the ID of the selected key.'''
         log.debug('Clicked publish for key (%s) %s (%s)', type(key), key, args)
-        keyid = key.keyid()
+        keyid = key.subkeys[0].fpr[-8:]
         self.emit('key-selected', keyid)
 
 
