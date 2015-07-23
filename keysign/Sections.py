@@ -347,7 +347,7 @@ class GetKeySection(Gtk.VBox):
         # For each key downloaded we create a new gpgme.Context object and
         # set up a temporary dir for gpg
         self.ctx = gpgme.Context()
-        gpg.gpg_set_engine(self.ctx)
+        tmp_gpghome = gpg.gpg_set_engine(self.ctx, protocol=gpgme.PROTOCOL_OpenPGP, dir_prefix='tmp.gpghome')
 
         other_clients = self.sort_clients(other_clients, fingerprint)
 
@@ -375,6 +375,10 @@ class GetKeySection(Gtk.VBox):
 
         self.log.debug('Adding %s as callback', callback)
         GLib.idle_add(callback, fingerprint, keydata, data)
+
+        # Remove the temporary keyring
+        gpg.gpg_reset_engine(self.ctx, tmp_gpghome)
+        self.log.info("Deleting temporary gpg home dir: %s", tmp_gpghome)
 
         # If this function is added itself via idle_add, then idle_add will
         # keep adding this function to the loop until this func ret False
@@ -482,6 +486,7 @@ class GetKeySection(Gtk.VBox):
 
         # We are done signing the key so we remove the temporary keyring
         gpg.gpg_reset_engine(ctx, gpg_homedir)
+        self.log.info("Deleting temporary gpg home dir: %s", gpg_homedir)
         return False
 
 
