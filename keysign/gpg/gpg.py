@@ -232,39 +232,7 @@ def gpg_format_key(gpgmeKey):
     return ret
 
 
-def UIDExport_gpgme(uid, keydata):
-    set_up_temp_dir()
-
-    ctx = gpgme.Context()
-    # XXX: do we need to set a "always-trust" flag ?
-    data = BytesIO(keydata)
-    try:
-        result = ctx.import_(data)
-    except gpgme.GpgmeError as err:
-        log.error("Couldn't import the key with the following keydata:\n%s", keydata)
-        raise ValueError('Invalid keydata')
-
-    keys = [key for key in ctx.keylist(uid)]
-    for key in keys:
-        for u in key.uids:
-            # XXX: at this moment I don't know a way to delete other UIDs from the key
-            # so in the end we have only the uid that must be signed
-            if u != uid:
-                log.info('Deleting UID %s from key %s', u.uid, key.subkeys[0].fpr)
-                try:
-                    key.uids.remove(u)
-                except ValueError as err:
-                    log.error("Couldn't delete UID %s from key %s", u.uid, key.subkeys[0].fpr)
-
-    keydata = BytesIO()
-    ctx.export(uid, keydata)
-
-    remove_temp_dir()
-    return keydata.getvalue()
-
-
 ### Below are functions that use old API and must be replaced ###
-
 def UIDExport(uid, keydata):
     """Export only the UID of a key.
     Unfortunately, GnuPG does not provide smth like

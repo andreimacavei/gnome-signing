@@ -31,7 +31,7 @@ import sys
 
 from monkeysign.ui import MonkeysignUi
 from keysign.gpg import gpg
-
+import gpgme
 
 from compat import gtkbutton
 import Keyserver
@@ -49,11 +49,7 @@ from gi.repository import GdkX11
 # Needed for window.get_xid(), xvimagesink.set_window_handle(), respectively:
 from gi.repository import GstVideo
 
-import gpgme
-try:
-    from io import BytesIO
-except ImportError:
-    from StringIO import StringIO as BytesIO
+
 
 Gst.init([])
 
