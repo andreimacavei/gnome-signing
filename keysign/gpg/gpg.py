@@ -158,6 +158,8 @@ def gpg_sign_uid(gpgmeContext, gpg_homedir, userId):
 
 
 def gpg_encrypt_data(gpgmeContext, data, uid, armor=True):
+    """Encrypts @data for the recipients @uid
+    """
     plaintext = BytesIO(data)
     ciphertext = BytesIO()
     gpgmeContext.armor = armor
