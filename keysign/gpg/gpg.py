@@ -156,6 +156,17 @@ def gpg_sign_uid(gpgmeContext, gpg_homedir, userId):
     return True
 
 
+def gpg_encrypt_data(gpgmeContext, data, uid, armor=True):
+    plaintext = BytesIO(data)
+    ciphertext = BytesIO()
+    gpgmeContext.armor = armor
+    recipients = gpg_get_keylist(gpgmeContext, uid)
+
+    gpgmeContext.encrypt(recipients, gpgme.ENCRYPT_ALWAYS_TRUST,
+                        plaintext, ciphertext)
+    return ciphertext.getvalue()
+
+
 def extract_fpr(gpgmeContext, keyid):
     """Extracts the fingerprint of a key with @keyid.
     """
