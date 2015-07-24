@@ -23,8 +23,10 @@ import sys
 import StringIO
 
 from gi.repository import GObject, Gtk, GLib, GdkPixbuf
-from keysign.gpg.gpg import GetNewKeyring
 from qrencode import encode_scaled
+
+import gpgme
+from gpg import gpg
 
 from datetime import datetime
 
@@ -36,43 +38,31 @@ from scan_barcode import BarcodeReaderGTK
 log = logging.getLogger()
 
 
-def parse_sig_list(text):
-    '''Parses GnuPG's signature list (i.e. list-sigs)
-
-    The format is described in the GnuPG man page'''
-    sigslist = []
-    for block in text.split("\n"):
-        if block.startswith("sig"):
-            record = block.split(":")
-            log.debug("sig record (%d) %s", len(record), record)
-            keyid, timestamp, uid = record[4], record[5], record[9]
-            sigslist.append((keyid, timestamp, uid))
-
-    return sigslist
-
 # This is a cache for a keyring object, so that we do not need
 # to create a new object every single time we parse signatures
-_keyring = None
-def signatures_for_keyid(keyid, keyring=None):
+_context = None
+def signatures_for_keyid(keyid, context=None):
     '''Returns the list of signatures for a given key id
 
-    This will call out to GnuPG list-sigs, using Monkeysign,
-    and parse the resulting string into a list of signatures.
+    This calls gpg.get_sig_list which returns a list with all
+    sigs for this uid
 
     A default Keyring will be used unless you pass an instance
     as keyring argument.
     '''
     # Retrieving a cached instance of a keyring,
     # unless we were being passed a keyring
-    global _keyring
-    if keyring is not None:
-        kr = keyring
+    global _context
+    if context is not None:
+        ctx = context
     else:
-        kr = _keyring if _keyring else GetNewKeyring()
+        ctx = _context if _context else gpgme.Context()
 
-    # FIXME: this would be better if it was done in monkeysign
-    kr.context.call_command(['list-sigs', keyid])
-    siglist = parse_sig_list(kr.context.stdout)
+    sigs = gpg.gpg_get_siglist(ctx, keyid)
+
+    siglist = []
+    for sig in sigs:
+        siglist.append((sig.keyid, sig.timestamp, sig.uid))
 
     return siglist
 
@@ -158,9 +148,6 @@ class KeyDetailsPage(Gtk.VBox):
         self.set_spacing(10)
         self.log = logging.getLogger()
 
-        # FIXME: this should be moved to KeySignSection
-        self.keyring = GetNewKeyring()
-
         uidsLabel = Gtk.Label()
         uidsLabel.set_text("UIDs")
 
@@ -183,7 +170,7 @@ class KeyDetailsPage(Gtk.VBox):
         self.pack_start(self.signaturesBox, True, True, 0)
 
 
-    def display_uids_signatures_page(self, openPgpKey):
+    def display_uids_signatures_page(self, gpgmeKey):
 
         # destroy previous uids
         for uid in self.uidsBox.get_children():
@@ -193,7 +180,7 @@ class KeyDetailsPage(Gtk.VBox):
 
         # display a list of uids
         labels = []
-        for uid in openPgpKey.uidslist:
+        for uid in gpgmeKey.uids:
             label = Gtk.Label(str(uid.uid))
             label.set_line_wrap(True)
             labels.append(label)
@@ -203,7 +190,7 @@ class KeyDetailsPage(Gtk.VBox):
             label.show()
 
         try:
-            exp_date = datetime.fromtimestamp(float(openPgpKey.expiry))
+            exp_date = datetime.fromtimestamp(float(gpgmeKey.subkeys[0].expires))
             expiry = "Expires {:%Y-%m-%d %H:%M:%S}".format(exp_date)
         except ValueError, e:
             expiry = "No expiration date"
@@ -212,7 +199,7 @@ class KeyDetailsPage(Gtk.VBox):
 
 
         ### Set up signatures
-        keyid = str(openPgpKey.keyid())
+        keyid = str(gpgmeKey.subkeys[0].fpr[-8:])
         sigslist = signatures_for_keyid(keyid)
 
         SHOW_SIGNATURES = False

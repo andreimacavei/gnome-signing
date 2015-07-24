@@ -114,6 +114,20 @@ def gpg_get_keylist(gpgmeContext, keyid=None, secret=False):
     return keys
 
 
+def gpg_get_siglist(gpgmeContext, keyid):
+    '''Returns a list with all signatures for this @keyid
+    '''
+    siglist = set()
+    gpgmeContext.keylist_mode = gpgme.KEYLIST_MODE_SIGS
+    key = gpgmeContext.get_key(keyid)
+
+    for uid in key.uids:
+        sigs = [sig for sig in uid.signatures]
+        siglist = siglist.union(sigs)
+
+    return list(siglist)
+
+
 def gpg_sign_uid(gpgmeContext, gpg_homedir, userId):
     """Signs a specific uid of a OpenPGP key
 
