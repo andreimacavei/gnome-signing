@@ -26,7 +26,8 @@ import logging
 from gi.repository import Gtk, GLib
 from gi.repository import GObject
 
-from keysign.gpg.gpg import GetNewKeyring
+import gpgme
+from gpg import gpg
 
 # These are relative imports
 from __init__ import __version__
@@ -130,13 +131,11 @@ def main(args=sys.argv):
 
         #if arguments.gpg:
         #    keyid = arguments.file
-        #    keyring = GetNewKeyring()
-        #    # this is a dict {fpr: key-instance}
-        #    found_keys = keyring.get_keys(keyid)
+        #    ctx = gpgme.Context()
+        #    found_keys = gpg.gpg_get_keylist(ctx, keyid)
         #    # We take the first item we found and export the actual keydata
-        #    fpr = found_keys.items()[0][0]
-        #    keyring.export_data(fpr=fpr, secret=False)
-        #    keydata = keyring.context.stdout
+        #    fpr = found_keys[0].subkeys[0].fpr
+        #    keydata = gpg.extract_keydata(ctx, fpr, True)
         #else:
         #    keydata = open(arguments.file, 'r').read()
         fpr = arguments.fpr
