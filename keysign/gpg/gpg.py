@@ -8,7 +8,6 @@ import shutil
 import tempfile
 from distutils.spawn import find_executable
 
-from monkeysign.gpg import Keyring, TempKeyring
 import gpgme
 import gpgme.editutil
 from io import BytesIO
@@ -248,113 +247,18 @@ def gpg_format_key(gpgmeKey):
     return ret
 
 
-### Below are functions that use old API and must be replaced ###
-def UIDExport(uid, keydata):
-    """Export only the UID of a key.
-    Unfortunately, GnuPG does not provide smth like
-    --export-uid-only in order to obtain a UID and its
-    signatures."""
-    tmp = TempKeyring()
-    # Hm, apparently this needs to be set, otherwise gnupg will issue
-    # a stray "gpg: checking the trustdb" which confuses the gnupg library
-    tmp.context.set_option('always-trust')
-    tmp.import_data(keydata)
-    for fpr, key in tmp.get_keys(uid).items():
-        for u in key.uidslist:
-            key_uid = u.uid
-            if key_uid != uid:
-                log.info('Deleting UID %s from key %s', key_uid, fpr)
-                tmp.del_uid(fingerprint=fpr, pattern=key_uid)
-    only_uid = tmp.export_data(uid)
+def test_print_secret_keys(gpgmeContext):
+    gpg_copy_secrets(gpgmeContext, gpghome)
 
-    return only_uid
-
-
-def MinimalExport(keydata):
-    '''Returns the minimised version of a key
-
-    For now, you must provide one key only.'''
-    tmpkeyring = TempKeyring()
-    ret = tmpkeyring.import_data(keydata)
-    log.debug("Returned %s after importing %s", ret, keydata)
-    assert ret
-    tmpkeyring.context.set_option('export-options', 'export-minimal')
-    keys = tmpkeyring.get_keys()
-    log.debug("Keys after importing: %s (%s)", keys, keys.items())
-    # We assume the keydata to contain one key only
-    fingerprint, key = keys.items()[0]
-    stripped_key = tmpkeyring.export_data(fingerprint)
-    return stripped_key
-
-
-def GetNewKeyring():
-    return Keyring()
-
-def GetNewTempKeyring():
-    return TempKeyring()
-
-class TempKeyringCopy(TempKeyring):
-    """A temporary keyring which uses the secret keys of a parent keyring
-
-    It mainly copies the public keys from the parent keyring to this temporary
-    keyring and sets this keyring up such that it uses the secret keys of the
-    parent keyring.
-    """
-    def __init__(self, keyring, *args, **kwargs):
-        self.keyring = keyring
-        # Not a new style class...
-        if issubclass(self.__class__, object):
-            super(TempKeyringCopy, self).__init__(*args, **kwargs)
-        else:
-            TempKeyring.__init__(self, *args, **kwargs)
-
-        self.log = logging.getLogger()
-
-        tmpkeyring = self
-        # Copy and paste job from monkeysign.ui.prepare
-        tmpkeyring.context.set_option('secret-keyring', keyring.homedir + '/secring.gpg')
-
-        # copy the gpg.conf from the real keyring
-        try:
-            from_ = keyring.homedir + '/gpg.conf'
-            to_ = tmpkeyring.homedir
-            shutil.copy(from_, to_)
-            self.log.debug('copied your gpg.conf from %s to %s', from_, to_)
-        except IOError as e:
-            # no such file or directory is alright: it means the use
-            # has no gpg.conf (because we are certain the temp homedir
-            # exists at this point)
-            if e.errno != 2:
-                pass
-
-
-        # Copy the public parts of the secret keys to the tmpkeyring
-        signing_keys = []
-        for fpr, key in keyring.get_keys(None, secret=True, public=False).items():
-            if not key.invalid and not key.disabled and not key.expired and not key.revoked:
-                signing_keys.append(key)
-                tmpkeyring.import_data (keyring.export_data (fpr))
-
-
-## Monkeypatching to get more debug output
-import monkeysign.gpg
-bc = monkeysign.gpg.Context.build_command
-def build_command(*args, **kwargs):
-    ret = bc(*args, **kwargs)
-    #log.info("Building command %s", ret)
-    log.debug("Building cmd: %s", ' '.join(["'%s'" % c for c in ret]))
-    return ret
-monkeysign.gpg.Context.build_command = build_command
-
+    keys = gpg_get_keylist(gpgmeContext)
+    for key in keys:
+        key_str = gpg_format_key(key)
+        print ("\nKey: \n%s") %(key_str,)
 
 
 if __name__ == '__main__':
     ctx = gpgme.Context()
     gpghome = gpg_set_engine(ctx)
-    gpg_copy_secrets(ctx, gpghome)
-
-    keys = gpg_get_keylist(ctx)
-    for key in keys:
-        key_str = gpg_format_key(key)
-        print ("\nKey: \n%s") %(key_str,)
+    test_print_secret_keys(ctx)
+    gpg_reset_engine(ctx, gpghome)
 
