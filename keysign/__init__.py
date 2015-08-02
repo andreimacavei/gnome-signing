@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 #    Copyright 2014 Tobias Mueller <muelli@cryptobitch.de>
+#    Copyright 2015 Andrei Macavei <andrei.macavei89@gmail.com>
 #
 #    This file is part of GNOME Keysign.
 #
@@ -24,9 +25,9 @@ def main():
     # can be imported without wanting to run it, e.g. setup.py
     # imports the __version__
     import logging, sys, signal
-    
+
     from gi.repository import GLib, Gtk
-    
+
     from .MainWindow import MainWindow
 
     app = MainWindow()
