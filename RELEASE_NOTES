@@ -4,8 +4,12 @@ This is the v0.3 release and bring a few tiny fixes all over the program.
 Changes
 ==========
 
+-Major
+ * New gpg library which replaces monkeysign dependency
  * Optimised finding the correct key to download
  * Removed once discovered clients if they disappear
+
+-Minor
  * Experimental compatibility for older Gtk versions (set_always_show_image)
  * Minor UI improvement: Do not delete the manually typed fingerprint when going back
  * Also accept more correctly typed fingerprint with a more relaxed verification routine
@@ -17,5 +21,5 @@ Resources
 =========
 
 Download: https://github.com/muelli/geysigning/releases/download/0.3/gnome-keysign-0.3.tar.gz
-sha256sum: 
+sha256sum:
 Web site: https://wiki.gnome.org/GnomeKeysign
