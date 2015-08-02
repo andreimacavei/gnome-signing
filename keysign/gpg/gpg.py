@@ -245,20 +245,3 @@ def gpg_format_key(gpgmeKey):
             ret += u"sub   %sR/%s %s" % (sk.length, sk.fpr[-8:], sk.timestamp)
             if sk.expires: ret += u' [expires: %s]\n' % (sk.expires,)
     return ret
-
-
-def test_print_secret_keys(gpgmeContext):
-    gpg_copy_secrets(gpgmeContext, gpghome)
-
-    keys = gpg_get_keylist(gpgmeContext)
-    for key in keys:
-        key_str = gpg_format_key(key)
-        print ("\nKey: \n%s") %(key_str,)
-
-
-if __name__ == '__main__':
-    ctx = gpgme.Context()
-    gpghome = gpg_set_engine(ctx)
-    test_print_secret_keys(ctx)
-    gpg_reset_engine(ctx, gpghome)
-
