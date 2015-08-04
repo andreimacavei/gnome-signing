@@ -86,10 +86,9 @@ class GpgTestSuite(unittest.TestCase):
         secret_keys = [key for key in ctx.keylist(None, True)]
 
         self.assertEqual(len(secret_keys), len(default_secret_keys))
-        i = 0
-        for i in xrange(len(secret_keys)):
-            self.assertEqual(secret_keys[i].subkeys[0].fpr, default_secret_keys[i].subkeys[0].fpr)
-            i += 1
+        all_keys = sum(key1.subkeys[0].fpr != key2.subkeys[0].fpr for key1, key2 in zip(secret_keys, default_secret_keys))
+        self.assertFalse(all_keys)
+
         # clean temporary dir
         shutil.rmtree(tmpdir, ignore_errors=True)
 
