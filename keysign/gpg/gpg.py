@@ -83,25 +83,26 @@ def gpg_copy_secrets(gpgmeContext, gpg_homedir):
 
     for key in secret_keys:
         if not key.revoked and not key.expired and not key.invalid and not key.subkeys[0].disabled:
-            gpg_import_key_by_fpr(gpgmeContext, key.subkeys[0].fpr)
+            gpg_import_key(gpgmeContext, key.subkeys[0].fpr)
 
 
-def gpg_import_key_by_fpr(gpgmeContext, fpr):
-    """Imports a key received by its @fpr into a temporary keyring.
+def gpg_import_key(gpgmeContext, fpr):
+    """Imports a key from the user's keyring into the keyring received
+    as argument.
 
-    It assumes that the received @gpgmeContext has its gpg homedir set already.
+    It assumes that the received keyring (@gpgmeContext) has its gpg homedir set already.
     """
-    # We make a new context because we need to get the key from it
+    # Get the default keyring
     ctx = gpgme.Context()
-    keydata = extract_keydata(ctx, fpr, True)
-    # It seems that keys can be imported from string streams only
-    keydataIO = StringIO(keydata)
-    try:
-        res = gpgmeContext.import_(keydataIO)
-    except gpgme.GpgmeError as err:
+    ctx.armor = True
+    keydata = StringIO()
+    ctx.export(fpr, keydata)
+
+    if not keydata.getvalue():
         log.error("No key found in user's keyring with fpr:\n%s", fpr)
         raise ValueError('Invalid fingerprint')
 
+    res = gpgmeContext.import_(keydata)
     return len(res.imports) != 0
 
 
