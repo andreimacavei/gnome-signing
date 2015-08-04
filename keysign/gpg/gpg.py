@@ -34,7 +34,7 @@ except ImportError:
     from io import StringIO
 
 
-log = logging.getLogger()
+log = logging.getLogger(__name__)
 
 gpg_default = os.environ['HOME'] + '/.gnupg/'
 gpg_path = find_executable('gpg')
