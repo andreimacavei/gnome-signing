@@ -162,8 +162,9 @@ def gpg_sign_uid(gpgmeContext, gpg_homedir, userId):
     try:
         uid_name, uid_email, uid_comment = userId.name, userId.email, userId.comment
     except AttributeError as exp:
-        log.error("%s is not a valid gpgme.UserId", userId)
-        raise ValueError("Invalid UID")
+        msg = "Invalid UserId object: %s" % userId
+        log.error(msg)
+        raise ValueError(msg)
 
     # we set keylist mode so we can see signatures
     gpgmeContext.keylist_mode = gpgme.KEYLIST_MODE_SIGS
