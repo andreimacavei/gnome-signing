@@ -92,22 +92,6 @@ class GpgTestSuite(unittest.TestCase):
         # clean temporary dir
         shutil.rmtree(tmpdir, ignore_errors=True)
 
-    def test_gpg_import_key_by_fpr(self):
-        ctx = gpgme.Context()
-        tmpdir = tempfile.mkdtemp(prefix='tmp.gpghome')
-        ctx.set_engine_info(gpgme.PROTOCOL_OpenPGP, gpg.gpg_path, tmpdir)
-
-        with self.keyfile('testkey1.pub') as fp:
-            ctx.import_(fp)
-
-        res = gpg.gpg_import_key_by_fpr(ctx, '31E91E906BA25D74BB315DEA9B33CFC7BB70DAFA')
-        self.assertTrue(res)
-
-        # can we get the key ?
-        key = ctx.get_key('31E91E906BA25D74BB315DEA9B33CFC7BB70DAFA')
-        # clean temporary dir
-        shutil.rmtree(tmpdir, ignore_errors=True)
-
     def test_gpg_import_keydata(self):
         ctx = gpgme.Context()
         tmpdir = tempfile.mkdtemp(prefix='tmp.gpghome')
