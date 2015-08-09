@@ -94,14 +94,14 @@ def gpg_import_key(gpgmeContext, fpr):
     """
     # Get the default keyring
     ctx = gpgme.Context()
-    ctx.armor = True
-    keydata = StringIO()
+    keydata = BytesIO()
     ctx.export(fpr, keydata)
 
     if not keydata.getvalue():
         log.error("No key found in user's keyring with fpr:\n%s", fpr)
         raise ValueError('Invalid fingerprint')
 
+    keydata.seek(0)
     res = gpgmeContext.import_(keydata)
     return len(res.imports) != 0
 
@@ -114,7 +114,7 @@ def gpg_import_keydata(gpgmeContext, keydata):
     # XXX: PyGPGME key imports doesn't work with data as unicode strings
     # but here we get data coming from network which is unicode
     keydata = keydata.encode('utf-8')
-    keydataIO = StringIO(keydata)
+    keydataIO = BytesIO(keydata)
     try:
         result = gpgmeContext.import_(keydataIO)
     except gpgme.GpgmeError as err:
@@ -162,7 +162,7 @@ def gpg_sign_uid(gpgmeContext, gpg_homedir, userId):
     try:
         uid_name, uid_email, uid_comment = userId.name, userId.email, userId.comment
     except AttributeError as exp:
-        msg = "Invalid UserId object: %s" % userId
+        msg = "Invalid UserId object: %r" % userId
         log.error(msg)
         raise ValueError(msg)
 
@@ -224,7 +224,7 @@ def export_key(gpgmeContext, fpr, armor=False):
     The key can be exported in ASCII-armored format if armor is set.
     """
     gpgmeContext.armor = armor
-    keydata = StringIO()
+    keydata = BytesIO()
     gpgmeContext.export(fpr, keydata)
     return keydata.getvalue()
 
