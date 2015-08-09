@@ -86,26 +86,9 @@ class GpgTestSuite(unittest.TestCase):
         secret_keys = [key for key in ctx.keylist(None, True)]
 
         self.assertEqual(len(secret_keys), len(default_secret_keys))
-        i = 0
-        for i in xrange(len(secret_keys)):
-            self.assertEqual(secret_keys[i].subkeys[0].fpr, default_secret_keys[i].subkeys[0].fpr)
-            i += 1
-        # clean temporary dir
-        shutil.rmtree(tmpdir, ignore_errors=True)
+        all_keys = sum(key1.subkeys[0].fpr != key2.subkeys[0].fpr for key1, key2 in zip(secret_keys, default_secret_keys))
+        self.assertFalse(all_keys)
 
-    def test_gpg_import_key_by_fpr(self):
-        ctx = gpgme.Context()
-        tmpdir = tempfile.mkdtemp(prefix='tmp.gpghome')
-        ctx.set_engine_info(gpgme.PROTOCOL_OpenPGP, gpg.gpg_path, tmpdir)
-
-        with self.keyfile('testkey1.pub') as fp:
-            ctx.import_(fp)
-
-        res = gpg.gpg_import_key_by_fpr(ctx, '31E91E906BA25D74BB315DEA9B33CFC7BB70DAFA')
-        self.assertTrue(res)
-
-        # can we get the key ?
-        key = ctx.get_key('31E91E906BA25D74BB315DEA9B33CFC7BB70DAFA')
         # clean temporary dir
         shutil.rmtree(tmpdir, ignore_errors=True)
 

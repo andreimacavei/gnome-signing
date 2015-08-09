@@ -147,7 +147,7 @@ class KeySignSection(Gtk.VBox):
 
         fpr = gpg.extract_fpr(self.ctx, keyid)
 
-        keydata = gpg.extract_keydata(self.ctx, fpr, True)
+        keydata = gpg.export_key(self.ctx, fpr, True)
 
         self.log.debug("Keyserver switched on! Serving key with fpr: %s", fpr)
         self.app.setup_server(keydata, fpr)
@@ -398,7 +398,7 @@ class GetKeySection(Gtk.VBox):
         if not keydata:
             self.log.debug("looking for key %s in your keyring", fingerprint)
             default_ctx = gpgme.Context()
-            keydata = gpg.extract_keydata(default_ctx, fingerprint, True)
+            keydata = gpg.export_key(default_ctx, fingerprint, True)
 
         # 1. Fetch the key into a temporary keyring
         self.log.debug('Trying to import key\n%s', keydata)
@@ -423,7 +423,7 @@ class GetKeySection(Gtk.VBox):
                     continue
 
                 # 3. Export and encrypt the signature
-                signed_key = gpg.extract_keydata(ctx, fingerprint, True)
+                signed_key = gpg.export_key(ctx, fingerprint, True)
                 self.log.info("Exported %d bytes of signed key", len(signed_key))
 
                 encrypted_key = gpg.gpg_encrypt_data(ctx, signed_key, uid_str)

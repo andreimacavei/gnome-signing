@@ -28,12 +28,15 @@ from distutils.spawn import find_executable
 import gpgme
 import gpgme.editutil
 from io import BytesIO
-from StringIO import StringIO
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 
 
-log = logging.getLogger()
+log = logging.getLogger(__name__)
 
-gpg_default = os.environ['HOME'] + '/.gnupg/'
+gpg_default = os.environ.get('GNUPGHOME', os.environ['HOME'] + '/.gnupg/')
 gpg_path = find_executable('gpg')
 
 
@@ -80,25 +83,26 @@ def gpg_copy_secrets(gpgmeContext, gpg_homedir):
 
     for key in secret_keys:
         if not key.revoked and not key.expired and not key.invalid and not key.subkeys[0].disabled:
-            gpg_import_key_by_fpr(gpgmeContext, key.subkeys[0].fpr)
+            gpg_import_key(gpgmeContext, key.subkeys[0].fpr)
 
 
-def gpg_import_key_by_fpr(gpgmeContext, fpr):
-    """Imports a key received by its @fpr into a temporary keyring.
+def gpg_import_key(gpgmeContext, fpr):
+    """Imports a key from the user's keyring into the keyring received
+    as argument.
 
-    It assumes that the received @gpgmeContext has its gpg homedir set already.
+    It assumes that the received keyring (@gpgmeContext) has its gpg homedir set already.
     """
-    # We make a new context because we need to get the key from it
+    # Get the default keyring
     ctx = gpgme.Context()
-    keydata = extract_keydata(ctx, fpr, True)
-    # It seems that keys can be imported from string streams only
-    keydataIO = StringIO(keydata)
-    try:
-        res = gpgmeContext.import_(keydataIO)
-    except gpgme.GpgmeError as err:
+    keydata = BytesIO()
+    ctx.export(fpr, keydata)
+
+    if not keydata.getvalue():
         log.error("No key found in user's keyring with fpr:\n%s", fpr)
         raise ValueError('Invalid fingerprint')
 
+    keydata.seek(0)
+    res = gpgmeContext.import_(keydata)
     return len(res.imports) != 0
 
 
@@ -110,7 +114,7 @@ def gpg_import_keydata(gpgmeContext, keydata):
     # XXX: PyGPGME key imports doesn't work with data as unicode strings
     # but here we get data coming from network which is unicode
     keydata = keydata.encode('utf-8')
-    keydataIO = StringIO(keydata)
+    keydataIO = BytesIO(keydata)
     try:
         result = gpgmeContext.import_(keydataIO)
     except gpgme.GpgmeError as err:
@@ -158,8 +162,9 @@ def gpg_sign_uid(gpgmeContext, gpg_homedir, userId):
     try:
         uid_name, uid_email, uid_comment = userId.name, userId.email, userId.comment
     except AttributeError as exp:
-        log.error("%s is not a valid gpgme.UserId", userId)
-        raise ValueError("Invalid UID")
+        msg = "Invalid UserId object: %r" % userId
+        log.error(msg)
+        raise ValueError(msg)
 
     # we set keylist mode so we can see signatures
     gpgmeContext.keylist_mode = gpgme.KEYLIST_MODE_SIGS
@@ -213,12 +218,13 @@ def extract_fpr(gpgmeContext, keyid):
     return key.subkeys[0].fpr
 
 
-def extract_keydata(gpgmeContext, fpr, armor=False):
-    """Extracts key data from a key with fingerprint @fpr.
-    Returns the data in plaintext (if armor=True) or binary.
+def export_key(gpgmeContext, fpr, armor=False):
+    """Exports the key with the given fingerprint from the user's keyring.
+
+    The key can be exported in ASCII-armored format if armor is set.
     """
     gpgmeContext.armor = armor
-    keydata = StringIO()
+    keydata = BytesIO()
     gpgmeContext.export(fpr, keydata)
     return keydata.getvalue()
 
