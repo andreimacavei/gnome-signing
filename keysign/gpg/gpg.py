@@ -218,14 +218,17 @@ def extract_fpr(gpgmeContext, keyid):
     return key.subkeys[0].fpr
 
 
-def export_key(gpgmeContext, fpr, armor=False):
+def export_key(gpgmeContext, fpr, armor=False, mode=None):
     """Exports the key with the given fingerprint from the user's keyring.
 
     The key can be exported in ASCII-armored format if armor is set.
     """
     gpgmeContext.armor = armor
     keydata = BytesIO()
-    gpgmeContext.export(fpr, keydata)
+    if mode:
+        gpgmeContext.export(fpr, keydata, mode)
+    else:
+        gpgmeContext.export(fpr, keydata)
     return keydata.getvalue()
 
 

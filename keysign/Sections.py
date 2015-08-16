@@ -392,9 +392,9 @@ class GetKeySection(Gtk.VBox):
         gpg_homedir = gpg.gpg_set_engine(ctx)
 
         keydata = data or self.received_key_data
-        # FIXME: until we have our patch to PyGPGME integrated, we cannot
-        # export the key with 'export-minimal' option
-        # stripped_key = gpg.gpg_export_minimal(ctx, keydata)
+        # FIXME: until this (https://code.launchpad.net/~daniele-athome/pygpgme/pygpgme/+merge/173333)
+        # gets merged in trunk, we cannot export the key with 'export-minimal' option
+        # stripped_key = gpg.gpg_export(ctx, keydata, True, gpgme.EXPORT_MODE_MINIMAL)
         if not keydata:
             self.log.debug("looking for key %s in your keyring", fingerprint)
             default_ctx = gpgme.Context()
