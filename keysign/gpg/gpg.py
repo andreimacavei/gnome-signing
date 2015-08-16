@@ -23,7 +23,6 @@ from string import Template
 import os
 import shutil
 import tempfile
-from distutils.spawn import find_executable
 
 import gpgme
 import gpgme.editutil
@@ -36,25 +35,20 @@ except ImportError:
 
 log = logging.getLogger(__name__)
 
-gpg_default = os.environ.get('GNUPGHOME', os.environ['HOME'] + '/.gnupg/')
-gpg_path = find_executable('gpg')
-
-
 def gpg_set_engine(gpgmeContext, protocol=gpgme.PROTOCOL_OpenPGP, dir_prefix=None):
     """Sets up a temporary directory as new gnupg home
     for this context
     """
     dir_prefix = dir_prefix if dir_prefix else 'tmp.gpghome'
     temp_dir = tempfile.mkdtemp(prefix=dir_prefix)
-    gpgmeContext.set_engine_info(protocol, gpg_path, temp_dir)
+    gpgmeContext.set_engine_info(protocol, None, temp_dir)
     return temp_dir
 
 
 def gpg_reset_engine(gpgmeContext, tmp_dir=None, protocol=gpgme.PROTOCOL_OpenPGP):
-    """Resets the gnupg dir to its default location
-    for current context
+    """Resets the gnupg homedir for the received context
     """
-    gpgmeContext.set_engine_info(protocol, gpg_path, gpg_default)
+    gpgmeContext.set_engine_info(protocol, None, None)
     if tmp_dir:
         shutil.rmtree(tmp_dir, ignore_errors=True)
 
@@ -63,7 +57,7 @@ def gpg_copy_secrets(gpgmeContext, gpg_homedir):
     """Copies secrets from .gnupg to new @gpg_homedir
     """
     ctx = gpgme.Context()
-
+    gpg_default = os.environ.get('GNUPGHOME', os.environ['HOME'] + '/.gnupg/')
     secring_path = gpg_default + 'secring.gpg'
     shutil.copy(secring_path, gpg_homedir)
     log.debug('copied your secring.gpg from %s to %s', secring_path, gpg_homedir)
@@ -79,7 +73,7 @@ def gpg_copy_secrets(gpgmeContext, gpg_homedir):
     secret_keys = [key for key in ctx.keylist(None, True)]
     # We set again the gpg homedir because there is no contex method "get_engine_info"
     # to tell us what gpg home it uses.
-    gpgmeContext.set_engine_info(gpgme.PROTOCOL_OpenPGP, gpg_path, gpg_homedir)
+    gpgmeContext.set_engine_info(gpgme.PROTOCOL_OpenPGP, None, gpg_homedir)
 
     for key in secret_keys:
         if not key.revoked and not key.expired and not key.invalid and not key.subkeys[0].disabled:
