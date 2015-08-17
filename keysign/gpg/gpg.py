@@ -149,7 +149,7 @@ def gpg_sign_uid(gpgmeContext, gpg_homedir, userId):
     @gpg_homedir is the directory that @gpgmeContext uses for gpg.
     @userId is a gpgme.UserId object
     """
-    # we import the user's primary key that will be used to sign
+    # We import the user's primary key that will be used to sign
     gpg_copy_secrets(gpgmeContext, gpg_homedir)
     primary_key = [key for key in gpgmeContext.keylist(None, True)][0]
     gpgmeContext.signers = [primary_key]
@@ -161,29 +161,25 @@ def gpg_sign_uid(gpgmeContext, gpg_homedir, userId):
         log.error(msg)
         raise ValueError(msg)
 
-    # we set keylist mode so we can see signatures
+    # We set keylist mode so we can see signatures
     gpgmeContext.keylist_mode = gpgme.KEYLIST_MODE_SIGS
     key = gpgmeContext.get_key(userId.uid)
 
-    # check if we didn't already signed this uid of the key
-    for (i, uid) in enumerate(key.uids):
-        # Get all signature of our primary key on this uid
-        sigs = [sig for sig in uid.signatures if primary_key.subkeys[0].fpr.endswith(sig.keyid)]
+    first_sig = True
 
-        # check if this uid is the same with the one that we want to sign
+    for (i, uid) in enumerate(key.uids):
+        # Check if this uid is the same with the one that we want to sign
         if uid.name == uid_name and uid.email == uid_email and uid.comment == uid_comment:
 
-            if len(sigs) == 0:
-                # if we haven't signed it yet
-                gpgme.editutil.edit_sign(gpgmeContext, key, index=i, check=0)
+            sigs = [sig for sig in uid.signatures if primary_key.subkeys[0].fpr.endswith(sig.keyid)]
+            if not len(sigs) == 0:
+                # This uid was signed by this key in the past. Update signature but set 'first_sig' to False
+                first_sig = False
 
-            else:
-                # we already signed this UID
-                log.info("Uid %s was already signed by key: \n%s", userId.uid, key.subkeys[0].fpr)
-                return False
+            gpgme.editutil.edit_sign(gpgmeContext, key, index=i, check=0)
             break
 
-    return True
+    return first_sig
 
 
 def gpg_encrypt_data(gpgmeContext, data, uid, armor=True):

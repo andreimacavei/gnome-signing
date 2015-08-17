@@ -421,8 +421,8 @@ class GetKeySection(Gtk.VBox):
                 res = gpg.gpg_sign_uid(ctx, gpg_homedir, uid)
                 if not res:
                     # we may have already signed this uid before
-                    self.log.info("Uid %s couldn't be signed. Maybe we already signed it?", uid_str)
-                    continue
+                    self.log.info("Uid %s was signed before.\nUpdating signature made by key: %s",
+                            uid_str, key.subkeys[0].fpr)
 
                 # 3. Export and encrypt the signature
                 signed_key = gpg.export_key(ctx, fingerprint, True)
