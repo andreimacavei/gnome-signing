@@ -56,9 +56,12 @@ def gpg_reset_engine(gpgmeContext, tmp_dir=None, protocol=gpgme.PROTOCOL_OpenPGP
 def gpg_copy_secrets(gpgmeContext, gpg_homedir):
     """Copies secrets from .gnupg to new @gpg_homedir
     """
+    # XXX: Latest report about not being able to export private key in GPGME can be found here
+    # https://lists.gnupg.org/pipermail/gnupg-devel/2015-August/030229.html
+    # Until then, we will use this hack to import user's private key into a temp keyring
     ctx = gpgme.Context()
-    gpg_default = os.environ.get('GNUPGHOME', os.environ['HOME'] + '/.gnupg/')
-    secring_path = gpg_default + 'secring.gpg'
+    gpg_default = os.environ.get('GNUPGHOME', os.path.join(os.environ['HOME'], '.gnupg'))
+    secring_path = os.path.join(gpg_default, 'secring.gpg')
     shutil.copy(secring_path, gpg_homedir)
     log.debug('copied your secring.gpg from %s to %s', secring_path, gpg_homedir)
 
