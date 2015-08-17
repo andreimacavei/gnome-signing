@@ -32,7 +32,7 @@ from StringIO import StringIO
 __all__ = ['GpgTestSuite']
 
 keydir = os.path.join(os.path.dirname(__file__), 'keys')
-gpg_default = os.environ['HOME'] + '/.gnupg/'
+gpg_default = os.environ.get('GNUPGHOME', os.path.join(os.environ['HOME'], '.gnupg'))
 
 
 class GpgTestSuite(unittest.TestCase):
@@ -58,7 +58,7 @@ class GpgTestSuite(unittest.TestCase):
         ctx = gpgme.Context()
         # set a temporary dir for gpg home
         tmpdir = tempfile.mkdtemp(prefix='tmp.gpghome')
-        ctx.set_engine_info(gpgme.PROTOCOL_OpenPGP, gpg.gpg_path, tmpdir)
+        ctx.set_engine_info(gpgme.PROTOCOL_OpenPGP, None, tmpdir)
 
         # check if we have created the new gpg dir
         self.assertTrue(os.path.isdir(tmpdir))
@@ -73,13 +73,13 @@ class GpgTestSuite(unittest.TestCase):
     def test_gpg_copy_secrets(self):
         ctx = gpgme.Context()
         tmpdir = tempfile.mkdtemp(prefix='tmp.gpghome')
-        ctx.set_engine_info(gpgme.PROTOCOL_OpenPGP, gpg.gpg_path, tmpdir)
+        ctx.set_engine_info(gpgme.PROTOCOL_OpenPGP, None, tmpdir)
 
         gpg.gpg_copy_secrets(ctx, tmpdir)
 
         # get the user's secret keys
         default_ctx = gpgme.Context()
-        default_ctx.set_engine_info(gpgme.PROTOCOL_OpenPGP, gpg.gpg_path, gpg_default)
+        default_ctx.set_engine_info(gpgme.PROTOCOL_OpenPGP, None, gpg_default)
         default_secret_keys = [key for key in default_ctx.keylist(None, True)]
 
         # compare the imported keys with the original secret keys
@@ -95,7 +95,7 @@ class GpgTestSuite(unittest.TestCase):
     def test_gpg_import_keydata(self):
         ctx = gpgme.Context()
         tmpdir = tempfile.mkdtemp(prefix='tmp.gpghome')
-        ctx.set_engine_info(gpgme.PROTOCOL_OpenPGP, gpg.gpg_path, tmpdir)
+        ctx.set_engine_info(gpgme.PROTOCOL_OpenPGP, None, tmpdir)
 
         with self.keyfile('testkey1.pub') as fp:
             keydata = fp.read()
@@ -109,7 +109,7 @@ class GpgTestSuite(unittest.TestCase):
     def test_gpg_sign_uid(self):
         ctx = gpgme.Context()
         tmpdir = tempfile.mkdtemp(prefix='tmp.gpghome')
-        ctx.set_engine_info(gpgme.PROTOCOL_OpenPGP, gpg.gpg_path, tmpdir)
+        ctx.set_engine_info(gpgme.PROTOCOL_OpenPGP, None, tmpdir)
 
         with self.keyfile('testkey1.pub') as fp:
             ctx.import_(fp)
