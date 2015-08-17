@@ -199,19 +199,6 @@ def gpg_encrypt_data(gpgmeContext, data, uid, armor=True):
     return ciphertext.getvalue()
 
 
-def extract_fpr(gpgmeContext, keyid):
-    """Extracts the fingerprint of a key with @keyid.
-    """
-    try:
-        key = gpgmeContext.get_key(keyid)
-    except gpgme.GpgmeError as err:
-        log.error('No key found with id: %s', keyid)
-        raise ValueError("Invalid keyid")
-
-    # A gpgme.Key object doesn't have a fpr but a gpgme.Subkey does
-    return key.subkeys[0].fpr
-
-
 def export_key(gpgmeContext, fpr, armor=False, mode=None):
     """Exports the key with the given fingerprint from the user's keyring.
 

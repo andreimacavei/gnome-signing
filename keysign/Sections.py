@@ -145,7 +145,8 @@ class KeySignSection(Gtk.VBox):
         '''
         self.log.info('User selected key %s', keyid)
 
-        fpr = gpg.extract_fpr(self.ctx, keyid)
+        key = self.keysPage.keysDict[keyid]
+        fpr = key.subkeys[0].fpr
 
         keydata = gpg.export_key(self.ctx, fpr, True)
 
