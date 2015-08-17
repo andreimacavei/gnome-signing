@@ -165,16 +165,16 @@ def gpg_sign_uid(gpgmeContext, gpg_homedir, userId):
     gpgmeContext.keylist_mode = gpgme.KEYLIST_MODE_SIGS
     key = gpgmeContext.get_key(userId.uid)
 
-    i = 1
     # check if we didn't already signed this uid of the key
-    for uid in key.uids:
+    for (i, uid) in enumerate(key.uids):
+        # Get all signature of our primary key on this uid
         sigs = [sig for sig in uid.signatures if primary_key.subkeys[0].fpr.endswith(sig.keyid)]
 
         # check if this uid is the same with the one that we want to sign
-        if (uid.name.startswith(uid_name) and uid.email.startswith(uid_email)
-                    and uid.comment.startswith(uid_comment)):
+        if uid.name == uid_name and uid.email == uid_email and uid.comment == uid_comment:
 
             if len(sigs) == 0:
+                # if we haven't signed it yet
                 gpgme.editutil.edit_sign(gpgmeContext, key, index=i, check=0)
 
             else:
@@ -182,7 +182,6 @@ def gpg_sign_uid(gpgmeContext, gpg_homedir, userId):
                 log.info("Uid %s was already signed by key: \n%s", userId.uid, key.subkeys[0].fpr)
                 return False
             break
-        i += 1
 
     return True
 
