@@ -112,14 +112,12 @@ def gpg_import_keydata(gpgmeContext, keydata):
     # but here we get data coming from network which is unicode
     keydata = keydata.encode('utf-8')
     keydataIO = BytesIO(keydata)
+    result = None
     try:
         result = gpgmeContext.import_(keydataIO)
     except gpgme.GpgmeError as err:
         log.error("Couldn't import the key with the following keydata:\n%s", keydataIO.getvalue())
-        return False
-    # XXX: we stick to return True/False for compatibility issues.
-    # The gpgme.ImportResult can be used to extract more information.
-    return True
+    return result
 
 
 def gpg_get_keylist(gpgmeContext, keyid=None, secret=False):

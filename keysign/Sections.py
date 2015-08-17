@@ -319,8 +319,9 @@ class GetKeySection(Gtk.VBox):
 
     def verify_downloaded_key(self, downloaded_data, fingerprint):
         # FIXME: implement a better and more secure way to verify the key
-        if gpg.gpg_import_keydata(self.ctx, downloaded_data):
-            imported_key_fpr = gpg.gpg_get_keylist(self.ctx, None, False)[0].subkeys[0].fpr
+        res = gpg.gpg_import_keydata(self.ctx, downloaded_data)
+        if res and len(res.imports):
+            (imported_key_fpr, null, null) = res.imports[0]
             if imported_key_fpr == fingerprint:
                 result = True
             else:
