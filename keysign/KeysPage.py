@@ -18,6 +18,8 @@
 #    You should have received a copy of the GNU General Public License
 #    along with GNOME Keysign.  If not, see <http://www.gnu.org/licenses/>.
 
+from keysign.misc.i18n import _
+
 from datetime import datetime
 import signal
 import sys
@@ -100,7 +102,7 @@ class KeysPage(Gtk.VBox):
                 # split into user's name and email
                 tokens = uid.split('<')
                 name = tokens[0].strip()
-                email = 'unknown'
+                email = _('unknown')
                 if len(tokens) > 1:
                     email = tokens[1].replace('>','').strip()
 
@@ -113,15 +115,15 @@ class KeysPage(Gtk.VBox):
             self.treeView = Gtk.TreeView(model=self.store)
             # setup 'Name' column
             nameRenderer = Gtk.CellRendererText()
-            nameColumn = Gtk.TreeViewColumn("Name", nameRenderer, text=0)
+            nameColumn = Gtk.TreeViewColumn(_("Name"), nameRenderer, text=0)
 
             # setup 'Email' column
             emailRenderer = Gtk.CellRendererText()
-            emailColumn = Gtk.TreeViewColumn("Email", emailRenderer, text=1)
+            emailColumn = Gtk.TreeViewColumn(_("Email"), emailRenderer, text=1)
 
             # setup 'Key' column
             keyRenderer = Gtk.CellRendererText()
-            keyColumn = Gtk.TreeViewColumn("Key", keyRenderer, text=2)
+            keyColumn = Gtk.TreeViewColumn(_("Key"), keyRenderer, text=2)
 
             self.treeView.append_column(nameColumn)
             self.treeView.append_column(emailColumn)
@@ -143,7 +145,7 @@ class KeysPage(Gtk.VBox):
             self.hpane = Gtk.HPaned()
             self.hpane.pack1(self.scrolled_window, False, False)
             self.right_pane = Gtk.VBox()
-            right_label = Gtk.Label(label='Select key on the left')
+            right_label = Gtk.Label(label=_('Select key on the left'))
             self.right_pane.add(right_label)
             # Hm, right now, the width of the right pane changes, when
             # a key is selected, because the right pane's content will be
@@ -184,7 +186,7 @@ class KeysPage(Gtk.VBox):
             exp_date = datetime.fromtimestamp(float(key.subkeys[0].expires))
             expiry = "{:%Y-%m-%d %H:%M:%S}".format(exp_date)
         except ValueError, e:
-            expiry = "No expiration date"
+            expiry = _("No expiration date")
 
         pane = self.right_pane
         for child in pane.get_children():
@@ -195,9 +197,9 @@ class KeysPage(Gtk.VBox):
             pane.remove(child)
         ctx = {'keyid':keyid, 'expiry':expiry, 'sigs':''}
         keyid_label = Gtk.Label(label='Key {keyid}'.format(**ctx))
-        expiration_label = Gtk.Label(label='Expires: {expiry}'.format(**ctx))
+        expiration_label = Gtk.Label(label=_('Expires') + ': {expiry}'.format(**ctx))
         #signatures_label = Gtk.Label(label='{sigs} signatures'.format(**ctx))
-        publish_button = Gtk.Button(label='Go ahead!'.format(**ctx))
+        publish_button = Gtk.Button(label=_('Go ahead!').format(**ctx))
         publish_button.connect('clicked', self.on_publish_button_clicked, key)
         map(pane.add, (keyid_label, expiration_label,
                        #signatures_label,
