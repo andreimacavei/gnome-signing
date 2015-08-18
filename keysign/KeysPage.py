@@ -17,8 +17,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with GNOME Keysign.  If not, see <http://www.gnu.org/licenses/>.
 
-from misc import i18n
-_ = i18n.language.ugettext #use ugettext instead of getttext to avoid unicode errors
+from keysign.misc.i18n import _
 
 from datetime import datetime
 import signal
