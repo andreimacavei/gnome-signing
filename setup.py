@@ -11,7 +11,7 @@ from setuptools import setup
 from setuptools.command.install import install
 #import py2exe
 
-from i18n import msgfmt
+from keysign.misc import msgfmt
 import os
 
 class build_trans(cmd.Command):
@@ -70,7 +70,7 @@ setup(
         'keysign',
         'keysign.compat',
         'keysign.network',
-        'i18n'],
+        'keysign.misc'],
     #package_dir={'keysign': 'keysign'},
     #package_data={'keysign': ['data/']},
     data_files=[
