@@ -13,6 +13,8 @@ class BuildPyCommand(setuptools.command.build_py.build_py):
 
 
 if __name__ == '__main__':
+    maintainers = 'Andrei Macavei'
+    maintainers_emails = ('andrei.macavei89@gmail.com')
 
     data_files = build_translations() + [
             ('share/applications', ['data/gnome-keysign.desktop']),
@@ -25,13 +27,16 @@ if __name__ == '__main__':
         name = 'gnome-keysign',
         version = version,
         description = 'OpenPGP key signing helper',
-        author = 'Tobias Mueller',
-        author_email = 'tobiasmue@gnome.org',
+        author = maintainers+', Tobias Mueller',
+        author_email = maintainers_emails+', tobiasmue@gnome.org',
+        # maintainer=maintainers,
+        # maintainer_email=maintainers_emails,
         url = 'http://wiki.gnome.org/GnomeKeysign',
         packages = [
             'keysign',
             'keysign.compat',
             'keysign.network',
+            'keysign.gpg',
             'keysign.misc'],
         #package_dir={'keysign': 'keysign'},
         #package_data={'keysign': ['data/']},
@@ -45,8 +50,8 @@ if __name__ == '__main__':
             # https://bugs.launchpad.net/ubuntu/+source/python-pip/+bug/1306991
             'requests<=2.2',
             'qrencode',
-            #'monkeysign', # Apparently not in the cheeseshop
-            # avahi # Also no entry in the cheeseshop
+            'pygpgme' # this requires libgpgme which is not in cheeseshop
+            # avahi # no entry in the cheeseshop
             # dbus # dbus-python is in the cheeseshop but not pip-able
             ],
         license='GPLv3+',
@@ -65,8 +70,9 @@ if __name__ == '__main__':
             'build_py': BuildPyCommand,
         },
         classifiers = [
-            # Maybe not yet...
-            #'Development Status :: 4 - Beta',
+            'Development Status :: 4 - Beta',
+
+            'Environment :: X11 Applications :: GTK',
 
             'Intended Audience :: Developers',
             'Intended Audience :: System Administrators',
@@ -75,24 +81,20 @@ if __name__ == '__main__':
             'Intended Audience :: Legal Industry',
             'Intended Audience :: Telecommunications Industry',
 
+            'License :: OSI Approved :: GNU General Public License (GPL)',
+            'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
+
+            'Natural Language :: English',
+
             'Programming Language :: Python',
             'Programming Language :: Python :: 2',
-            # I think we are only 2.7 compatible
             'Programming Language :: Python :: 2.7',
             # We're still lacking support for 3
             #'Programming Language :: Python :: 3',
 
-            'License :: OSI Approved :: GNU General Public License (GPL)',
-            'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
-
             'Operating System :: POSIX :: Linux',
 
-            'Environment :: X11 Applications :: GTK',
-
             'Topic :: Desktop Environment',
-
-            'Natural Language :: English',
-
             'Topic :: Communications :: Email',
             'Topic :: Multimedia :: Video :: Capture',
             'Topic :: Security :: Cryptography',

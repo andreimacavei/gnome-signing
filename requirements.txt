@@ -1,7 +1,6 @@
 # Debian packages
 python-gi
 python-avahi
-python-gpgme
-qrencode
+libgpgme
 
-# Libs: python-dev, libqrencode-dev, libffi-dev, libssl-dev
+# Libs: python-dev, libqrencode-dev, libffi-dev, libssl-dev, libgpgme-dev
