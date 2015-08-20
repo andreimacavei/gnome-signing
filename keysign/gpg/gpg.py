@@ -21,8 +21,10 @@ import logging
 from string import Template
 
 import os
+from os.path import expanduser
 import shutil
 import tempfile
+import subprocess
 
 import gpgme
 import gpgme.editutil
@@ -53,34 +55,36 @@ def gpg_reset_engine(gpgmeContext, tmp_dir=None, protocol=gpgme.PROTOCOL_OpenPGP
         shutil.rmtree(tmp_dir, ignore_errors=True)
 
 
-def gpg_copy_secrets(gpgmeContext, gpg_homedir):
-    """Copies secrets from .gnupg to new @gpg_homedir
+def gpg_export_private_key(gpgmeContext, gpg_homedir):
+    """Exports user's private key from default keyring to a temporary file.
+
+    Then it imports the private key back into a temporary keyring and deletes
+    the temporary file.
     """
     # XXX: Latest report about not being able to export private key in GPGME can be found here
     # https://lists.gnupg.org/pipermail/gnupg-devel/2015-August/030229.html
     # Until then, we will use this hack to import user's private key into a temp keyring
+
+    # Set up a tmp dir for exporting the private key
+    tmp_dir = tempfile.mkdtemp(prefix="tmp.gpgsecret", dir=".")
+    key_file = os.path.join(tmp_dir, 'secret-keys.gpg')
+    subprocess.call(["gpg", "--export-secret-keys", "--output", key_file])
+    log.debug("exported your private key to: %s", key_file)
+
+    with open(key_file, 'rb') as fp:
+        gpgmeContext.import_(fp)
+
+    # Import the public key part for the private keys
     ctx = gpgme.Context()
-    gpg_default = os.environ.get('GNUPGHOME', os.path.join(os.environ['HOME'], '.gnupg'))
-    secring_path = os.path.join(gpg_default, 'secring.gpg')
-    shutil.copy(secring_path, gpg_homedir)
-    log.debug('copied your secring.gpg from %s to %s', secring_path, gpg_homedir)
+    keys = [key for key in ctx.keylist(None, True)]
 
-    try:
-        conf_path = gpg_default + 'gpg.conf'
-        shutil.copy(conf_path, gpg_homedir)
-        log.debug('copied your gpg.conf from %s to %s', conf_path, gpg_homedir)
-    except IOError as e:
-        log.error('User has no gpg.conf file')
-
-    # Imports user's private keys into the new keyring
-    secret_keys = [key for key in ctx.keylist(None, True)]
-    # We set again the gpg homedir because there is no contex method "get_engine_info"
-    # to tell us what gpg home it uses.
-    gpgmeContext.set_engine_info(gpgme.PROTOCOL_OpenPGP, None, gpg_homedir)
-
-    for key in secret_keys:
+    for key in keys:
         if not key.revoked and not key.expired and not key.invalid and not key.subkeys[0].disabled:
             gpg_import_key(gpgmeContext, key.subkeys[0].fpr)
+
+    # Delete the tmp dir along with the secret key file
+    shutil.rmtree(tmp_dir, ignore_errors=True)
+    log.debug("removed temporary secret key directory: %s", tmp_dir)
 
 
 def gpg_import_key(gpgmeContext, fpr):
@@ -150,7 +154,7 @@ def gpg_sign_uid(gpgmeContext, gpg_homedir, userId):
     @userId is a gpgme.UserId object
     """
     # We import the user's primary key that will be used to sign
-    gpg_copy_secrets(gpgmeContext, gpg_homedir)
+    gpg_export_private_key(gpgmeContext, gpg_homedir)
     primary_key = [key for key in gpgmeContext.keylist(None, True)][0]
     gpgmeContext.signers = [primary_key]
 

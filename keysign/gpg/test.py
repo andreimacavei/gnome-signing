@@ -17,6 +17,7 @@
 #    along with GNOME Keysign.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
+from os.path import expanduser
 import sys
 import shutil
 import tempfile
@@ -32,7 +33,7 @@ from StringIO import StringIO
 __all__ = ['GpgTestSuite']
 
 keydir = os.path.join(os.path.dirname(__file__), 'keys')
-gpg_default = os.environ.get('GNUPGHOME', os.path.join(os.environ['HOME'], '.gnupg'))
+gpg_default = os.environ.get('GNUPGHOME', os.path.join(expanduser("~"), '.gnupg'))
 
 
 class GpgTestSuite(unittest.TestCase):
@@ -70,12 +71,12 @@ class GpgTestSuite(unittest.TestCase):
         # clean temporary dir
         shutil.rmtree(tmpdir, ignore_errors=True)
 
-    def test_gpg_copy_secrets(self):
+    def test_gpg_export_private_key(self):
         ctx = gpgme.Context()
         tmpdir = tempfile.mkdtemp(prefix='tmp.gpghome')
         ctx.set_engine_info(gpgme.PROTOCOL_OpenPGP, None, tmpdir)
 
-        gpg.gpg_copy_secrets(ctx, tmpdir)
+        gpg.gpg_export_private_key(ctx, tmpdir)
 
         # get the user's secret keys
         default_ctx = gpgme.Context()
