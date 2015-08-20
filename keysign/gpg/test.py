@@ -71,12 +71,12 @@ class GpgTestSuite(unittest.TestCase):
         # clean temporary dir
         shutil.rmtree(tmpdir, ignore_errors=True)
 
-    def test_gpg_export_private_key(self):
+    def test_gpg_import_private_key(self):
         ctx = gpgme.Context()
         tmpdir = tempfile.mkdtemp(prefix='tmp.gpghome')
         ctx.set_engine_info(gpgme.PROTOCOL_OpenPGP, None, tmpdir)
 
-        gpg.gpg_export_private_key(ctx, tmpdir)
+        gpg.gpg_import_private_key(ctx)
 
         # get the user's secret keys
         default_ctx = gpgme.Context()

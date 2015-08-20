@@ -21,7 +21,7 @@ import logging
 from string import Template
 
 import os
-from os.path import expanduser
+import sys
 import shutil
 import tempfile
 import subprocess
@@ -55,36 +55,30 @@ def gpg_reset_engine(gpgmeContext, tmp_dir=None, protocol=gpgme.PROTOCOL_OpenPGP
         shutil.rmtree(tmp_dir, ignore_errors=True)
 
 
-def gpg_export_private_key(gpgmeContext, gpg_homedir):
-    """Exports user's private key from default keyring to a temporary file.
-
-    Then it imports the private key back into a temporary keyring and deletes
-    the temporary file.
+def gpg_import_private_key(gpgmeContext, secret_key=None):
+    """Imports the user's private key from @secret_key or the default keyring
+     to a temporary context.
     """
-    # XXX: Latest report about not being able to export private key in GPGME can be found here
-    # https://lists.gnupg.org/pipermail/gnupg-devel/2015-August/030229.html
-    # Until then, we will use this hack to import user's private key into a temp keyring
+    if secret_key:
+        keydata = secret_key
+    else:
+        # XXX: There is no option to export a private key in GPGME. Latest post about it can
+        # be found here: https://lists.gnupg.org/pipermail/gnupg-devel/2015-August/030229.html
+        # We use this hack for now to import user's private key into a temp keyring
+        keydata = subprocess.check_output(["gpg", "--armor", "--export-secret-keys"])
 
-    # Set up a tmp dir for exporting the private key
-    tmp_dir = tempfile.mkdtemp(prefix="tmp.gpgsecret", dir=".")
-    key_file = os.path.join(tmp_dir, 'secret-keys.gpg')
-    subprocess.call(["gpg", "--export-secret-keys", "--output", key_file])
-    log.debug("exported your private key to: %s", key_file)
-
-    with open(key_file, 'rb') as fp:
+    with BytesIO(keydata) as fp:
         gpgmeContext.import_(fp)
 
-    # Import the public key part for the private keys
+    # Import the personal public keys also
     ctx = gpgme.Context()
     keys = [key for key in ctx.keylist(None, True)]
 
     for key in keys:
         if not key.revoked and not key.expired and not key.invalid and not key.subkeys[0].disabled:
             gpg_import_key(gpgmeContext, key.subkeys[0].fpr)
+            log.debug("imported your personal key: %s to tmp keyring", key.subkeys[0].fpr)
 
-    # Delete the tmp dir along with the secret key file
-    shutil.rmtree(tmp_dir, ignore_errors=True)
-    log.debug("removed temporary secret key directory: %s", tmp_dir)
 
 
 def gpg_import_key(gpgmeContext, fpr):
@@ -154,7 +148,7 @@ def gpg_sign_uid(gpgmeContext, gpg_homedir, userId):
     @userId is a gpgme.UserId object
     """
     # We import the user's primary key that will be used to sign
-    gpg_export_private_key(gpgmeContext, gpg_homedir)
+    gpg_import_private_key(gpgmeContext)
     primary_key = [key for key in gpgmeContext.keylist(None, True)][0]
     gpgmeContext.signers = [primary_key]
 
