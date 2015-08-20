@@ -141,14 +141,20 @@ def gpg_get_siglist(gpgmeContext, keyid):
     return list(siglist)
 
 
-def gpg_sign_uid(gpgmeContext, gpg_homedir, userId):
+def gpg_sign_uid(gpgmeContext, gpg_homedir, userId, secret_key=None):
     """Signs a specific uid of a OpenPGP key
 
-    @gpg_homedir is the directory that @gpgmeContext uses for gpg.
-    @userId is a gpgme.UserId object
+    gpgmeContext: the temporary keyring
+    gpg_homedir: the current GPG directory
+    userId: sign this userId
+    secret_key: if this is given than it will be used as the primary key
+
+    @rtype: bool
+    @return: True/False depending if this uid was signed for the first time
+    by this key
     """
-    # We import the user's primary key that will be used to sign
-    gpg_import_private_key(gpgmeContext)
+    gpg_import_private_key(gpgmeContext, secret_key)
+
     primary_key = [key for key in gpgmeContext.keylist(None, True)][0]
     gpgmeContext.signers = [primary_key]
 

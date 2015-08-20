@@ -115,8 +115,12 @@ class GpgTestSuite(unittest.TestCase):
         with self.keyfile('testkey1.pub') as fp:
             ctx.import_(fp)
 
+        with self.keyfile('signonly.sec') as fp:
+            secret_key = fp.read()
+
         userId = ctx.get_key('john.doe@test.com').uids[0]
-        res = gpg.gpg_sign_uid(ctx, tmpdir, userId)
+        res = gpg.gpg_sign_uid(ctx, tmpdir, userId, secret_key)
+
         self.assertTrue(res)
 
         # verify if we have the uid signed
