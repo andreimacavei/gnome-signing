@@ -17,6 +17,7 @@
 #    along with GNOME Keysign.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
+from os.path import expanduser
 import sys
 import shutil
 import tempfile
@@ -32,7 +33,7 @@ from StringIO import StringIO
 __all__ = ['GpgTestSuite']
 
 keydir = os.path.join(os.path.dirname(__file__), 'keys')
-gpg_default = os.environ.get('GNUPGHOME', os.path.join(os.environ['HOME'], '.gnupg'))
+gpg_default = os.environ.get('GNUPGHOME', os.path.join(expanduser("~"), '.gnupg'))
 
 
 class GpgTestSuite(unittest.TestCase):
@@ -70,12 +71,12 @@ class GpgTestSuite(unittest.TestCase):
         # clean temporary dir
         shutil.rmtree(tmpdir, ignore_errors=True)
 
-    def test_gpg_copy_secrets(self):
+    def test_gpg_import_private_key(self):
         ctx = gpgme.Context()
         tmpdir = tempfile.mkdtemp(prefix='tmp.gpghome')
         ctx.set_engine_info(gpgme.PROTOCOL_OpenPGP, None, tmpdir)
 
-        gpg.gpg_copy_secrets(ctx, tmpdir)
+        gpg.gpg_import_private_key(ctx)
 
         # get the user's secret keys
         default_ctx = gpgme.Context()
@@ -114,8 +115,12 @@ class GpgTestSuite(unittest.TestCase):
         with self.keyfile('testkey1.pub') as fp:
             ctx.import_(fp)
 
+        with self.keyfile('signonly.sec') as fp:
+            secret_key = fp.read()
+
         userId = ctx.get_key('john.doe@test.com').uids[0]
-        res = gpg.gpg_sign_uid(ctx, tmpdir, userId)
+        res = gpg.gpg_sign_uid(ctx, tmpdir, userId, secret_key)
+
         self.assertTrue(res)
 
         # verify if we have the uid signed

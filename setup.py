@@ -31,7 +31,6 @@ if __name__ == '__main__':
         author_email = maintainers_emails+', tobiasmue@gnome.org',
         # maintainer=maintainers,
         # maintainer_email=maintainers_emails,
-        url = 'http://wiki.gnome.org/GnomeKeysign',
         packages = [
             'keysign',
             'keysign.compat',
@@ -52,7 +51,6 @@ if __name__ == '__main__':
             'qrencode',
             'pygpgme' # this requires libgpgme which is not in cheeseshop
             # avahi # no entry in the cheeseshop
-            # dbus # dbus-python is in the cheeseshop but not pip-able
             ],
         license='GPLv3+',
         long_description=open('README.rst').read(),
