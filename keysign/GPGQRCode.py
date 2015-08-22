@@ -21,18 +21,22 @@
 for keys and selects the one matching your input
 """
 from gi.repository import Gtk
-from keysign.gpg.gpg import GetNewKeyring
+import gpgme
+from gpg import gpg
 
 from QRCode import QRImage
 
 def main():
     import sys
+    if len(sys.argv) < 2:
+        print ("Usage: script.py <KEY>")
+        sys.exit(0)
     key = sys.argv[1]
-    keyring = GetNewKeyring()
-    keys = keyring.get_keys(key)
+    keyring = gpgme.Context()
+    keys = gpg.gpg_get_keylist(keyring, key)
     # Heh, we take the first key here. Maybe we should raise a warning
     # or so, when there is more than one key.
-    fpr = keys.items()[0][0]
+    fpr = keys[0].subkeys[0].fpr
     data = 'OPENPGP4FPR:' + fpr
 
     w = Gtk.Window()
