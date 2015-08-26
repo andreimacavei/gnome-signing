@@ -23,7 +23,7 @@ import shutil
 import tempfile
 
 import gpgme
-import gpg
+from keysign.gpg import gpg
 
 import unittest
 
@@ -128,5 +128,6 @@ class GpgTestSuite(unittest.TestCase):
         self.assertEqual(len(sigs), 2) #we're counting the self signature
 
 
-if __name__ == '__main__':
-    unittest.main()
+def test_suite():
+    loader = unittest.TestLoader()
+    return loader.loadTestsFromName(__name__)

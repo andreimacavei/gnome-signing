@@ -4,4 +4,5 @@ python-avahi
 python-gpgme
 qrcode
 
-# Libs: python-dev, libqrencode-dev, libffi-dev, libssl-dev
+
+# Libs: python-dev, libqrencode-dev, libffi-dev, libssl-dev, libgpgme, libgpgme-dev

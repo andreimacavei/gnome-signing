@@ -18,6 +18,8 @@
 #    You should have received a copy of the GNU General Public License
 #    along with GNOME Keysign.  If not, see <http://www.gnu.org/licenses/>.
 
+from keysign.misc.i18n import _
+
 import logging
 import signal
 import sys
@@ -57,8 +59,8 @@ class MainWindow(Gtk.Application):
 
         # create notebook container
         notebook = Gtk.Notebook()
-        notebook.append_page(KeySignSection(self), Gtk.Label('Keys'))
-        notebook.append_page(GetKeySection(self), Gtk.Label('Get Key'))
+        notebook.append_page(KeySignSection(self), Gtk.Label(_('Keys')))
+        notebook.append_page(GetKeySection(self), Gtk.Label(_('Get Key')))
         self.window.add(notebook)
 
         quit = Gio.SimpleAction(name="quit", parameter_type=None)
@@ -83,10 +85,10 @@ class MainWindow(Gtk.Application):
         some_action = Gio.SimpleAction.new("scan-image", None)
         some_action.connect('activate', self.on_scan_image)
         self.add_action(some_action)
-        some_item = Gio.MenuItem.new("Scan Image", "app.scan-image")
+        some_item = Gio.MenuItem.new(_("Scan Image"), "app.scan-image")
         section.append_item(some_item)
 
-        quit_item = Gio.MenuItem.new("Quit", "app.quit")
+        quit_item = Gio.MenuItem.new(_("Quit"), "app.quit")
         section.append_item(quit_item)
 
         self.set_app_menu(appmenu)

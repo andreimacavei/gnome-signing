@@ -1,0 +1,7 @@
+[encoding: UTF-8]
+# List of source files containing translatable strings.
+# Please keep this file sorted alphabetically.
+keysign/KeysPage.py
+keysign/Sections.py
+keysign/SignPages.py
+keysign/MainWindow.py

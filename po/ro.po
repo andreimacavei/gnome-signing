@@ -1,0 +1,150 @@
+# Romanian translations for PACKAGE package.
+# Copyright (C) 2015 THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# Andrei Macavei <andrei.macavei89@gmail.com>, 2015.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2015-06-23 21:35+0300\n"
+"PO-Revision-Date: 2015-06-24 13:26+0300\n"
+"Last-Translator: Andrei Macavei <andrei.macavei89@gmail.com>\n"
+"Language-Team: Romanian\n"
+"Language: ro\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=ASCII\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=n==1 ? 0 : (n==0 || (n%100 > 0 && n%100 < "
+"20)) ? 1 : 2;\n"
+
+#: keysign/KeysPage.py:105
+msgid "unknown"
+msgstr "necunoscut"
+
+#: keysign/KeysPage.py:116
+msgid "Name"
+msgstr "Nume"
+
+#: keysign/KeysPage.py:120
+msgid "Email"
+msgstr "Email"
+
+#: keysign/KeysPage.py:124
+msgid "Key"
+msgstr "Cheie"
+
+#: keysign/KeysPage.py:146
+msgid "Select key on the left"
+msgstr "Alege cheia din stanga"
+
+#: keysign/KeysPage.py:187 keysign/SignPages.py:214
+msgid "No expiration date"
+msgstr "Nu exista data de expirare"
+
+#: keysign/KeysPage.py:198 keysign/SignPages.py:176 keysign/SignPages.py:212
+msgid "Expires"
+msgstr "Expira"
+
+#: keysign/KeysPage.py:200
+msgid "Go ahead!"
+msgstr "Mergi inainte!"
+
+#: keysign/MainWindow.py:63
+msgid "Keys"
+msgstr "Chei"
+
+#: keysign/MainWindow.py:64
+msgid "Get Key"
+msgstr "Ia cheia"
+
+#: keysign/MainWindow.py:89
+msgid "Scan Image"
+msgstr "Scaneaza Imaginea"
+
+#: keysign/MainWindow.py:92
+msgid "Quit"
+msgstr "Exit"
+
+#: keysign/SignPages.py:92
+msgid "Key Fingerprint"
+msgstr "Amprenta Cheie"
+
+#: keysign/SignPages.py:107
+msgid "Fingerprint QR code"
+msgstr "Cod QR amprenta cheie"
+
+#: keysign/SignPages.py:179
+msgid "Signatures"
+msgstr "Semnaturi"
+
+#: keysign/SignPages.py:241
+msgid "signatures"
+msgstr "semnaturi"
+
+#: keysign/SignPages.py:257
+msgid "Type fingerprint"
+msgstr "Scrie amprenta cheii"
+
+#: keysign/SignPages.py:259
+msgid "or scan QR code"
+msgstr "sau scaneaza codul QR"
+
+#: keysign/SignPages.py:270
+msgid "QR Scanner"
+msgstr "Scaner QR"
+
+#: keysign/SignPages.py:276
+msgid "Open Image"
+msgstr "Deschide Imaginea"
+
+#: keysign/SignPages.py:331
+msgid "Signing the following key"
+msgstr "Semneaza cheia urmatoare"
+
+#: keysign/SignPages.py:335
+msgid ""
+"Press 'Next' if you have checked the ID of the person\n"
+"and you want to sign all UIDs on this key."
+msgstr "Apasa 'Inainte' daca ai verificat ID-ul persoanei\n"
+"si vrei sa semnezi toate UID-urile acestei chei"
+
+#: keysign/SignPages.py:350
+msgid "The key was signed and an email was sent to key owner! What next?"
+msgstr "Cheia a fost semnata si un email a fost trimis detinatorului cheii. Ce urmeaza?"
+
+#: keysign/SignPages.py:353
+msgid "   Resend email   "
+msgstr "Retrimite email"
+
+#: keysign/SignPages.py:358
+msgid " Save key locally "
+msgstr "Salveaza cheia local"
+
+#: keysign/SignPages.py:363
+msgid "Revoke signature"
+msgstr "Revoca semnatura"
+
+#: keysign/Sections.py:61
+msgid "Step 1: Scan QR Code or type fingerprint and click on 'Download' button"
+msgstr "Pas 1: Scaneaza codul QR sau tasteaza amprenta si apasa butonul 'Descarca'"
+
+#: keysign/Sections.py:62
+msgid "Step 2: Compare the received fpr with the owner's fpr and click 'Sign'"
+msgstr "Pas 2: Compara amprenta primita cu cea a detinatorului cheii si apasa 'Semneaza'"
+
+#: keysign/Sections.py:63
+msgid "Step 3: Key was succesfully signed and an email was send to owner."
+msgstr "Pas 3: Cheia a fost semnata cu succes si un email a fost trimis detinatorului"
+
+#: keysign/Sections.py:210 keysign/Sections.py:341
+msgid "Back"
+msgstr "Inapoi"
+
+#: keysign/Sections.py:336
+msgid "Next"
+msgstr "Inainte"
+
+#: keysign/Sections.py:639
+msgid "Error downloading key with fpr"
+msgstr "Eroare descarcare cheie cu amprenta"

@@ -17,6 +17,8 @@
 #    You should have received a copy of the GNU General Public License
 #    along with GNOME Keysign.  If not, see <http://www.gnu.org/licenses/>.
 
+from keysign.misc.i18n import _
+
 from itertools import islice
 import logging
 import sys
@@ -74,7 +76,7 @@ class KeyPresentPage(Gtk.HBox):
 
         # create left side Key labels
         leftTopLabel = Gtk.Label()
-        leftTopLabel.set_markup('<span size="15000">' + 'Key Fingerprint' + '</span>')
+        leftTopLabel.set_markup('<span size="15000">' + _('Key Fingerprint') + '</span>')
 
         self.fingerprintLabel = Gtk.Label()
         self.fingerprintLabel.set_selectable(True)
@@ -89,7 +91,7 @@ class KeyPresentPage(Gtk.HBox):
 
         # display QR code on the right side
         qrcodeLabel = Gtk.Label()
-        qrcodeLabel.set_markup('<span size="15000">' + 'Fingerprint QR code' + '</span>')
+        qrcodeLabel.set_markup('<span size="15000">' + _('Fingerprint QR code') + '</span>')
 
         self.qrcode = QRImage()
         self.qrcode.props.margin = 10
@@ -155,10 +157,10 @@ class KeyDetailsPage(Gtk.VBox):
         self.uidsBox = Gtk.VBox(spacing=5)
 
         self.expireLabel = Gtk.Label()
-        self.expireLabel.set_text("Expires 0000-00-00")
+        self.expireLabel.set_text(_("Expires") + " 0000-00-00")
 
         self.signatures_label = signaturesLabel = Gtk.Label()
-        signaturesLabel.set_text("Signatures")
+        signaturesLabel.set_text(_("Signatures"))
 
         # this will also be populated later
         self.signaturesBox = Gtk.VBox(spacing=5)
@@ -191,9 +193,9 @@ class KeyDetailsPage(Gtk.VBox):
 
         try:
             exp_date = datetime.fromtimestamp(float(gpgmeKey.subkeys[0].expires))
-            expiry = "Expires {:%Y-%m-%d %H:%M:%S}".format(exp_date)
+            expiry = _("Expires {:%Y-%m-%d %H:%M:%S}").format(exp_date)
         except ValueError, e:
-            expiry = "No expiration date"
+            expiry = _("No expiration date")
 
         self.expireLabel.set_markup(expiry)
 
@@ -220,7 +222,7 @@ class KeyDetailsPage(Gtk.VBox):
                 sigLabel.show()
 
         sigLabel = Gtk.Label()
-        sigLabel.set_markup("%d signatures" % len(sigslist))
+        sigLabel.set_markup("%d " % len(siglist) + _("signatures"))
         sigLabel.set_line_wrap(True)
         self.signaturesBox.pack_start(sigLabel, False, False, 0)
         sigLabel.show()
@@ -236,9 +238,9 @@ class ScanFingerprintPage(Gtk.HBox):
 
         # set up labels
         leftLabel = Gtk.Label()
-        leftLabel.set_markup('Type fingerprint')
+        leftLabel.set_markup(_('Type fingerprint'))
         rightLabel = Gtk.Label()
-        rightLabel.set_markup('... or scan QR code')
+        rightLabel.set_markup('... ' + _('or scan QR code'))
 
         # set up text editor
         self.textview = Gtk.TextView()
@@ -249,13 +251,13 @@ class ScanFingerprintPage(Gtk.HBox):
         scrolledwindow.add(self.textview)
 
         # set up webcam frame
-        self.scanFrame = Gtk.Frame(label='QR Scanner')
+        self.scanFrame = Gtk.Frame(label=_('QR Scanner'))
         self.scanFrame = BarcodeReaderGTK()
         self.scanFrame.set_size_request(150,150)
         self.scanFrame.show()
 
         # set up load button: this will be used to load a qr code from a file
-        self.loadButton = Gtk.Button('Open Image')
+        self.loadButton = Gtk.Button(_('Open Image'))
         self.loadButton.set_image(Gtk.Image.new_from_icon_name('gtk-open', Gtk.IconSize.BUTTON))
         self.loadButton.connect('clicked', self.on_loadbutton_clicked)
         self.loadButton.set_always_show_image(True)
@@ -310,15 +312,12 @@ class SignKeyPage(Gtk.VBox):
         # should be disabled
         key_text = GLib.markup_escape_text(str(formatted_key))
 
-        markup = """\
+        markup = "\n\n" + _("Signing the following key") + """\
 
+<b>%s</b>
 
-Signing the following key
-
-<b>{0}</b>
-
-Press 'Next' if you have checked the ID of the person
-and you want to sign all UIDs on this key.""".format(key_text)
+""" % key_text + _("Press 'Next' if you have checked the ID of the person\
+\nand you want to sign all UIDs on this key.")
 
         self.mainLabel.set_markup(markup)
         self.mainLabel.show()
@@ -332,20 +331,20 @@ class PostSignPage(Gtk.VBox):
 
         # setup the label
         signedLabel = Gtk.Label()
-        signedLabel.set_text('The key was signed and an email was sent to key owner! What next?')
+        signedLabel.set_text(_('The key was signed and an email was sent to key owner! What next?'))
 
         # setup the buttons
-        sendBackButton = Gtk.Button('   Resend email   ')
+        sendBackButton = Gtk.Button(_('   Resend email   '))
         sendBackButton.set_image(Gtk.Image.new_from_icon_name("gtk-network", Gtk.IconSize.BUTTON))
         sendBackButton.set_always_show_image(True)
         sendBackButton.set_halign(Gtk.Align.CENTER)
 
-        saveButton = Gtk.Button(' Save key locally ')
+        saveButton = Gtk.Button(_(' Save key locally '))
         saveButton.set_image(Gtk.Image.new_from_icon_name("gtk-save", Gtk.IconSize.BUTTON))
         saveButton.set_always_show_image(True)
         saveButton.set_halign(Gtk.Align.CENTER)
 
-        emailButton = Gtk.Button('Revoke signature')
+        emailButton = Gtk.Button(_('Revoke signature'))
         emailButton.set_image(Gtk.Image.new_from_icon_name("gtk-clear", Gtk.IconSize.BUTTON))
         emailButton.set_always_show_image(True)
         emailButton.set_halign(Gtk.Align.CENTER)
