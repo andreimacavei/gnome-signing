@@ -29,23 +29,33 @@ and gives the user a well known interface.
 Installation
 =============
 
+IMPORTANT: There is still an issue with installing this into user's local path (i.e: using: pip install --user).
+This is because python's 'sys.prefix' path doesn't change accordingly when '--user' is provided, so it will still want
+to install translation files to '/usr/share/locale' and it will require sudo privileges.
+
 The list of dependencies has not yet fully been determined.
 However, this list of Ubuntu packages seems to make it work:
 
-    python  avahi-daemon  python-avahi python-gi  gir1.2-glib-2.0   gir1.2-gtk-3.0 python-dbus python-requests monkeysign python-qrcode gir1.2-gstreamer-1.0 gir1.2-gst-plugins-base-1.0 gstreamer1.0-plugins-bad
+    python  avahi-daemon  python-avahi python-gi  gir1.2-glib-2.0   gir1.2-gtk-3.0 python-dbus python-requests python-qrcode gir1.2-gstreamer-1.0 gir1.2-gst-plugins-base-1.0 gstreamer1.0-plugins-bad libgpgme11 python-gpgme
 
 
-Once you have the dependencies installed, a
+Once you have the dependencies installed, you can use
 
-    pip install --user .
+    pip install .
+or
 
-should do everything in order to install the program to your
-user's home directory.
+    python setup.py install
+
+in order to install the program.
+
 
 If you don't have a local copy of the repository, you may try
 
-    pip install --user 'git+https://github.com/muelli/geysigning.git#egg=gnome-keysign'
-    
+    pip install 'git+https://github.com/andreimac/geysigning.git#egg=gnome-keysign'
+
+If you want to test this it is higly recommended to install it into a virtualenv such as: <http://docs.python-guide.org/en/latest/dev/virtualenvs/>.
+
+
 
 
 Portability to older versions
@@ -92,21 +102,21 @@ Running
 Server side
 -----------
 
-This describes running the application's server mode in order to allow 
-you to have your key signed by others running the application in client 
+This describes running the application's server mode in order to allow
+you to have your key signed by others running the application in client
 mode.
 
 Once you've fired up the application, you can see a list of your private keys.
 Select one and click "Next".
 
-You will see the details of the key you've selected.  You can revise 
-your selected and click "Back".  If you are happy with the key you have 
-selected, click "Next".  This will cause the key's availability to be 
-published on the local network.  Also, a HTTP server will be spawned in 
-order to enable others to download your key.  You also notice a bar 
+You will see the details of the key you've selected.  You can revise
+your selected and click "Back".  If you are happy with the key you have
+selected, click "Next".  This will cause the key's availability to be
+published on the local network.  Also, a HTTP server will be spawned in
+order to enable others to download your key.  You also notice a bar
 code.  For now, it encodes the fingerprint of the key you have selected.
 
-Either share the fingerprint or the bar code with someone who wants to 
+Either share the fingerprint or the bar code with someone who wants to
 sign your key.
 
 
@@ -115,21 +125,21 @@ Client side
 
 Here, the client side is described. This is to sign someone's key.
 
-If you select the "Get Key" Tab, you can either enter a key's 
-fingerprint manually or scan a bar code.  If you meet someone who has 
+If you select the "Get Key" Tab, you can either enter a key's
+fingerprint manually or scan a bar code.  If you meet someone who has
 the server side of the application running, you can scan the bar code
 present at the other party.
 
 After you either typed a fingerprint or scanned a bar code, the program
 will look for the relevant key on your local network.  Note that you've
-transmitted the fingerprint securely, i.e. via a visual channel in form 
-of a bar code or the displayed fingerprint.  This data allows to 
-find the correct key.  In fact, they client tries to find the correct 
-key by comparing the fingerprint of the keys available on the local 
+transmitted the fingerprint securely, i.e. via a visual channel in form
+of a bar code or the displayed fingerprint.  This data allows to
+find the correct key.  In fact, they client tries to find the correct
+key by comparing the fingerprint of the keys available on the local
 network.
 
-After the correct key has been found, you see details of the key to be 
-signed.  If you are happy with what you see, i.e. because you have 
-checked the names on the key to be correct, you can click next.  This 
-will cause the program to sign the key and open your mail program with 
+After the correct key has been found, you see details of the key to be
+signed.  If you are happy with what you see, i.e. because you have
+checked the names on the key to be correct, you can click next.  This
+will cause the program to sign the key and open your mail program with
 the encrypted signature preloaded as attachment.

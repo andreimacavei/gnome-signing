@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#    Copyright 2014 Andrei Macavei <andrei.macavei89@gmail.com>
+#    Copyright 2015 Andrei Macavei <andrei.macavei89@gmail.com>
 #
 #    This file is part of GNOME Keysign.
 #
