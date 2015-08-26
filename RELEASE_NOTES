@@ -1,13 +1,17 @@
 GNOME Keysign  is a tool to make signing OpenPGP keys as easy as possible.
-This is the v0.3 release and bring a few tiny fixes all over the program.
+This is the v1.0 release and brings a lot of major and minor fixes all over the program.
+
 
 Changes
 ==========
 
 -Major
  * New gpg library which replaces monkeysign dependency
+ * Replaced 'qrencode' with pure python QR code generator 'qrcode'
+ * Added internationalization & localization support
  * Optimised finding the correct key to download
  * Removed once discovered clients if they disappear
+ * Added tests for new GPG library
 
 -Minor
  * Experimental compatibility for older Gtk versions (set_always_show_image)
@@ -20,6 +24,6 @@ Changes
 Resources
 =========
 
-Download: https://github.com/muelli/geysigning/releases/download/0.3/gnome-keysign-0.3.tar.gz
+Download: https://github.com/andreimac/geysigning/releases/download/1.0/gnome-keysign-1.0.tar.gz
 sha256sum:
 Web site: https://wiki.gnome.org/GnomeKeysign
