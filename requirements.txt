@@ -1,8 +1,18 @@
-# Debian packages
-python-gi
-python-avahi
-python-gpgme
+# Python packages
 qrcode
+pygpgme
 
 
-# Libs: python-dev, libqrencode-dev, libffi-dev, libssl-dev, libgpgme, libgpgme-dev
+# Distribution packages:
+# python-gi
+# python-gi-cairo
+# python-avahi
+# python-gpgme #XXX: isn't this the same with 'pygpgme' from PyPI ?
+# libgpgme
+# python-dev #needed for Python.h if gpgme is not installed
+
+
+# FIXME: these needs more testing
+# libgpgme-dev
+# libffi-dev
+# libssl-dev
