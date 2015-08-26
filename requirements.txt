@@ -1,7 +1,22 @@
-# Debian packages
-python-gi
-python-avahi
-python-gpgme
+# FIXME: gobject?
+
+# Python packages
+# python-gi
+# python-avahi
+# python-gpgme
+requests
 qrencode
 
-# Libs: python-dev, libqrencode-dev, libffi-dev, libssl-dev
+# Additional Development packages
+pytest
+pytest-xdist
+pylint
+pep8
+
+# Distribution packages
+# python2
+# python2-gobject
+# python-dev
+# libqrencode-dev
+# libffi-dev
+# libssl-dev
