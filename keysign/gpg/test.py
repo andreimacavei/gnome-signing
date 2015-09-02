@@ -118,13 +118,15 @@ class GpgTestSuite(unittest.TestCase):
             secret_key = fp.read()
 
         userId = ctx.get_key('john.doe@test.com').uids[0]
+        len_before = len(userId.signatures)
         res = gpg.gpg_sign_uid(ctx, tmpdir, userId, secret_key)
 
         self.assertTrue(res)
 
         # verify if we have the uid signed
         sigs = ctx.get_key('john.doe@test.com').uids[0].signatures
-        self.assertEqual(len(sigs), 2) #we're counting the self signature
+        len_after = len(sigs)
+        self.assertGreater(len_after, len_before)
 
 
 if __name__ == '__main__':
