@@ -27,8 +27,7 @@ import gpg
 
 import unittest
 
-from io import BytesIO
-from StringIO import StringIO
+from io import BytesIO, StringIO
 
 __all__ = ['GpgTestSuite']
 
