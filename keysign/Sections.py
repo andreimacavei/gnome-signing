@@ -296,6 +296,9 @@ class GetKeySection(Gtk.VBox):
 
 
     def download_key_http(self, address, port):
+        '''Downloads a key from a keyserver and provides
+        bytes (as opposed to an unencoded string).
+        '''
         url = ParseResult(
             scheme='http',
             # This seems to work well enough with both IPv6 and IPv4
@@ -304,8 +307,9 @@ class GetKeySection(Gtk.VBox):
             params='',
             query='',
             fragment='')
-        return requests.get(url.geturl()).text
+        return requests.get(url.geturl()).text.encode('utf-8')
 
+    
     def try_download_keys(self, clients):
         for client in clients:
             self.log.debug("Getting key from client %s", client)
