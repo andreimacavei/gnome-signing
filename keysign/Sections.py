@@ -381,8 +381,11 @@ class GetKeySection(Gtk.VBox):
         self.log.debug('Adding %s as callback', callback)
         GLib.idle_add(callback, fingerprint, keydata, data)
 
-        # Remove the temporary keyring
-        gpg.gpg_reset_engine(self.ctx, tmp_gpghome)
+        # FIXME: Remove the temporary keyring.
+        #        We cannot do it right now, because the key is signed
+        #        later! If we delete the directory now, we cannot sign
+        #        it...
+        #gpg.gpg_reset_engine(self.ctx, tmp_gpghome)
         self.log.info("Deleting temporary gpg home dir: %s", tmp_gpghome)
 
         # If this function is added itself via idle_add, then idle_add will
