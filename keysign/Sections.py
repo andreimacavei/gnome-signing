@@ -296,6 +296,9 @@ class GetKeySection(Gtk.VBox):
 
 
     def download_key_http(self, address, port):
+        '''Downloads a key from a keyserver and provides
+        bytes (as opposed to an unencoded string).
+        '''
         url = ParseResult(
             scheme='http',
             # This seems to work well enough with both IPv6 and IPv4
@@ -304,8 +307,9 @@ class GetKeySection(Gtk.VBox):
             params='',
             query='',
             fragment='')
-        return requests.get(url.geturl()).text
+        return requests.get(url.geturl()).text.encode('utf-8')
 
+    
     def try_download_keys(self, clients):
         for client in clients:
             self.log.debug("Getting key from client %s", client)
@@ -377,8 +381,11 @@ class GetKeySection(Gtk.VBox):
         self.log.debug('Adding %s as callback', callback)
         GLib.idle_add(callback, fingerprint, keydata, data)
 
-        # Remove the temporary keyring
-        gpg.gpg_reset_engine(self.ctx, tmp_gpghome)
+        # FIXME: Remove the temporary keyring.
+        #        We cannot do it right now, because the key is signed
+        #        later! If we delete the directory now, we cannot sign
+        #        it...
+        #gpg.gpg_reset_engine(self.ctx, tmp_gpghome)
         self.log.info("Deleting temporary gpg home dir: %s", tmp_gpghome)
 
         # If this function is added itself via idle_add, then idle_add will
@@ -572,5 +579,7 @@ class GetKeySection(Gtk.VBox):
 
     def recieved_key(self, fingerprint, keydata, *data):
         self.received_key_data = keydata
-        gpgmeKey = gpg.gpg_get_keylist(self.ctx, fingerprint, False)[0]
+        keylist =  gpg.gpg_get_keylist(self.ctx, fingerprint, False)
+        self.log.debug('Getting keylist: %r', keylist)
+        gpgmeKey = keylist[0]
         self.signPage.display_downloaded_key(gpg.gpg_format_key(gpgmeKey))

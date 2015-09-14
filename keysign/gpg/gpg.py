@@ -102,13 +102,11 @@ def gpg_import_key(gpgmeContext, fpr):
 
 
 def gpg_import_keydata(gpgmeContext, keydata):
-    """Tries to import a OpenPGP key from @keydata
+    """Tries to import a OpenPGP key from @keydata.
+    Keydata needs to be bytes (or an encoded string).
 
     The @gpgmeContext object has a gpg directory already set.
     """
-    # XXX: PyGPGME key imports doesn't work with data as unicode strings
-    # but here we get data coming from network which is unicode
-    keydata = keydata.encode('utf-8')
     keydataIO = BytesIO(keydata)
     result = None
     try:
