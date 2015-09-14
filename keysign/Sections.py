@@ -255,6 +255,8 @@ class GetKeySection(Gtk.VBox):
         # A list holding references to temporary files which should probably
         # be cleaned up on exit...
         self.tmpfiles = []
+        # A path to a tmp gpg homedir
+        self.tmp_gpghome = None
 
     def set_progress_bar(self):
         page_index = self.notebook.get_current_page()
@@ -309,7 +311,7 @@ class GetKeySection(Gtk.VBox):
             fragment='')
         return requests.get(url.geturl()).text.encode('utf-8')
 
-    
+
     def try_download_keys(self, clients):
         for client in clients:
             self.log.debug("Getting key from client %s", client)
@@ -352,7 +354,7 @@ class GetKeySection(Gtk.VBox):
         # For each key downloaded we create a new gpgme.Context object and
         # set up a temporary dir for gpg
         self.ctx = gpgme.Context()
-        tmp_gpghome = gpg.gpg_set_engine(self.ctx, protocol=gpgme.PROTOCOL_OpenPGP, dir_prefix='tmp.gpghome')
+        self.tmp_gpghome = gpg.gpg_set_engine(self.ctx, protocol=gpgme.PROTOCOL_OpenPGP, dir_prefix='tmp.gpghome')
 
         other_clients = self.sort_clients(other_clients, fingerprint)
 
@@ -380,13 +382,6 @@ class GetKeySection(Gtk.VBox):
 
         self.log.debug('Adding %s as callback', callback)
         GLib.idle_add(callback, fingerprint, keydata, data)
-
-        # FIXME: Remove the temporary keyring.
-        #        We cannot do it right now, because the key is signed
-        #        later! If we delete the directory now, we cannot sign
-        #        it...
-        #gpg.gpg_reset_engine(self.ctx, tmp_gpghome)
-        self.log.info("Deleting temporary gpg home dir: %s", tmp_gpghome)
 
         # If this function is added itself via idle_add, then idle_add will
         # keep adding this function to the loop until this func ret False
@@ -581,5 +576,10 @@ class GetKeySection(Gtk.VBox):
         self.received_key_data = keydata
         keylist =  gpg.gpg_get_keylist(self.ctx, fingerprint, False)
         self.log.debug('Getting keylist: %r', keylist)
+        # Delete temporary dir after we're done getting the key
+        if self.tmp_gpghome:
+            gpg.gpg_reset_engine(self.ctx, self.tmp_gpghome)
+            self.log.info("Deleting tmp gpg homedir: %s", self.tmp_gpghome)
+
         gpgmeKey = keylist[0]
         self.signPage.display_downloaded_key(gpg.gpg_format_key(gpgmeKey))
