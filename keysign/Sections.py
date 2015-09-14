@@ -257,6 +257,8 @@ class GetKeySection(Gtk.VBox):
         # A list holding references to temporary files which should probably
         # be cleaned up on exit...
         self.tmpfiles = []
+        # A path to a tmp gpg homedir
+        self.tmp_gpghome = None
 
     def set_progress_bar(self):
         page_index = self.notebook.get_current_page()
@@ -298,6 +300,9 @@ class GetKeySection(Gtk.VBox):
 
 
     def download_key_http(self, address, port):
+        '''Downloads a key from a keyserver and provides
+        bytes (as opposed to an unencoded string).
+        '''
         url = ParseResult(
             scheme='http',
             # This seems to work well enough with both IPv6 and IPv4
@@ -306,7 +311,8 @@ class GetKeySection(Gtk.VBox):
             params='',
             query='',
             fragment='')
-        return requests.get(url.geturl()).text
+        return requests.get(url.geturl()).text.encode('utf-8')
+
 
     def try_download_keys(self, clients):
         for client in clients:
@@ -350,7 +356,7 @@ class GetKeySection(Gtk.VBox):
         # For each key downloaded we create a new gpgme.Context object and
         # set up a temporary dir for gpg
         self.ctx = gpgme.Context()
-        tmp_gpghome = gpg.gpg_set_engine(self.ctx, protocol=gpgme.PROTOCOL_OpenPGP, dir_prefix='tmp.gpghome')
+        self.tmp_gpghome = gpg.gpg_set_engine(self.ctx, protocol=gpgme.PROTOCOL_OpenPGP, dir_prefix='tmp.gpghome')
 
         other_clients = self.sort_clients(other_clients, fingerprint)
 
@@ -378,10 +384,6 @@ class GetKeySection(Gtk.VBox):
 
         self.log.debug('Adding %s as callback', callback)
         GLib.idle_add(callback, fingerprint, keydata, data)
-
-        # Remove the temporary keyring
-        gpg.gpg_reset_engine(self.ctx, tmp_gpghome)
-        self.log.info("Deleting temporary gpg home dir: %s", tmp_gpghome)
 
         # If this function is added itself via idle_add, then idle_add will
         # keep adding this function to the loop until this func ret False
@@ -574,5 +576,12 @@ class GetKeySection(Gtk.VBox):
 
     def recieved_key(self, fingerprint, keydata, *data):
         self.received_key_data = keydata
-        gpgmeKey = gpg.gpg_get_keylist(self.ctx, fingerprint, False)[0]
+        keylist =  gpg.gpg_get_keylist(self.ctx, fingerprint, False)
+        self.log.debug('Getting keylist: %r', keylist)
+        # Delete temporary dir after we're done getting the key
+        if self.tmp_gpghome:
+            gpg.gpg_reset_engine(self.ctx, self.tmp_gpghome)
+            self.log.info("Deleting tmp gpg homedir: %s", self.tmp_gpghome)
+
+        gpgmeKey = keylist[0]
         self.signPage.display_downloaded_key(gpg.gpg_format_key(gpgmeKey))
