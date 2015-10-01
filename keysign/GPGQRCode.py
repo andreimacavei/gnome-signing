@@ -29,8 +29,8 @@ from QRCode import QRImage
 def main():
     import sys
     if len(sys.argv) < 2:
-        print ("Usage: script.py <KEY>")
-        sys.exit(0)
+        print ("Usage: {} <KEY>".format(sys.argv[0]))
+        sys.exit(1)
     key = sys.argv[1]
     keyring = gpgme.Context()
     keys = gpg.gpg_get_keylist(keyring, key)
