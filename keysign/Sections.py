@@ -309,7 +309,7 @@ class GetKeySection(Gtk.VBox):
             params='',
             query='',
             fragment='')
-        return requests.get(url.geturl()).text.encode('utf-8')
+        return requests.get(url.geturl()).content
 
 
     def try_download_keys(self, clients):
