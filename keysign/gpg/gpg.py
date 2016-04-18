@@ -29,6 +29,7 @@ import subprocess
 import gpgme
 import gpgme.editutil
 from io import BytesIO
+from datetime import datetime
 try:
     from StringIO import StringIO
 except ImportError:
@@ -116,12 +117,18 @@ def gpg_import_keydata(gpgmeContext, keydata):
     return result
 
 
-def gpg_get_keylist(gpgmeContext, keyid=None, secret=False):
+def gpg_get_keylist(gpgmeContext, keyid=None, secret=False, expired=False):
     """Returns the keys found in @gpgmeContext
     If @keyid is None then all geys will be returned.
     If @secret=True then it will return the secret keys.
     """
-    keys = [key for key in gpgmeContext.keylist(keyid, secret)]
+    keys = []
+    for key in gpgmeContext.keylist(keyid, secret):
+        exp_date = datetime.fromtimestamp(float(key.subkeys[0].expires))
+        if expired == False and key.subkeys[0].expires != 0 and exp_date.date() < datetime.today().date():
+            continue
+        keys.append(key)
+
     return keys
 
 
