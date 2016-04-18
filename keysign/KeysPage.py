@@ -79,7 +79,7 @@ class KeysPage(Gtk.VBox):
         self.keysDict = {}
 
         # FIXME: implement a callback that refreshes the UIDs when they change
-        for key in gpg.gpg_get_keylist(self.ctx, None, True):
+        for key in gpg.get_keylist(self.ctx, None, True):
             if key.revoked or key.expired or key.invalid or key.subkeys[0].disabled:
                 continue
 

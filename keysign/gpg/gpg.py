@@ -38,7 +38,7 @@ except ImportError:
 
 log = logging.getLogger(__name__)
 
-def gpg_set_engine(gpgmeContext, protocol=gpgme.PROTOCOL_OpenPGP, dir_prefix=None):
+def set_engine(gpgmeContext, protocol=gpgme.PROTOCOL_OpenPGP, dir_prefix=None):
     """Sets up a temporary directory as new gnupg home
     for this context
     """
@@ -48,7 +48,7 @@ def gpg_set_engine(gpgmeContext, protocol=gpgme.PROTOCOL_OpenPGP, dir_prefix=Non
     return temp_dir
 
 
-def gpg_reset_engine(gpgmeContext, tmp_dir=None, protocol=gpgme.PROTOCOL_OpenPGP):
+def reset_engine(gpgmeContext, tmp_dir=None, protocol=gpgme.PROTOCOL_OpenPGP):
     """Resets the gnupg homedir for the received context
     """
     gpgmeContext.set_engine_info(protocol, None, None)
@@ -56,7 +56,7 @@ def gpg_reset_engine(gpgmeContext, tmp_dir=None, protocol=gpgme.PROTOCOL_OpenPGP
         shutil.rmtree(tmp_dir, ignore_errors=True)
 
 
-def gpg_import_private_key(gpgmeContext, secret_key=None):
+def import_private_key(gpgmeContext, secret_key=None):
     """Imports the user's private key from @secret_key or the default keyring
      to a temporary context.
     """
@@ -77,12 +77,12 @@ def gpg_import_private_key(gpgmeContext, secret_key=None):
 
     for key in keys:
         if not key.revoked and not key.expired and not key.invalid and not key.subkeys[0].disabled:
-            gpg_import_key(gpgmeContext, key.subkeys[0].fpr)
+            import_key(gpgmeContext, key.subkeys[0].fpr)
             log.debug("imported your personal key: %s to tmp keyring", key.subkeys[0].fpr)
 
 
 
-def gpg_import_key(gpgmeContext, fpr):
+def import_key(gpgmeContext, fpr):
     """Imports a key from the user's keyring into the keyring received
     as argument.
 
@@ -102,7 +102,7 @@ def gpg_import_key(gpgmeContext, fpr):
     return len(res.imports) != 0
 
 
-def gpg_import_keydata(gpgmeContext, keydata):
+def import_keydata(gpgmeContext, keydata):
     """Tries to import a OpenPGP key from @keydata.
     Keydata needs to be bytes (or an encoded string).
 
@@ -117,10 +117,12 @@ def gpg_import_keydata(gpgmeContext, keydata):
     return result
 
 
-def gpg_get_keylist(gpgmeContext, keyid=None, secret=False, expired=False):
+def get_keylist(gpgmeContext, keyid=None, secret=False, expired=False):
     """Returns the keys found in @gpgmeContext
-    If @keyid is None then all geys will be returned.
-    If @secret=True then it will return the secret keys.
+
+    @keyid: the unique id of a key.
+    @secret: if set to True it returns the secret keys, else it returns the public keys.
+    @expired: if set to True it also returns the expired keys.
     """
     keys = []
     for key in gpgmeContext.keylist(keyid, secret):
@@ -132,7 +134,7 @@ def gpg_get_keylist(gpgmeContext, keyid=None, secret=False, expired=False):
     return keys
 
 
-def gpg_get_siglist(gpgmeContext, keyid):
+def get_siglist(gpgmeContext, keyid):
     '''Returns a list with all signatures for this @keyid
     '''
     siglist = set()
@@ -146,7 +148,7 @@ def gpg_get_siglist(gpgmeContext, keyid):
     return list(siglist)
 
 
-def gpg_sign_uid(gpgmeContext, gpg_homedir, userId, secret_key=None):
+def sign_uid(gpgmeContext, gpg_homedir, userId, secret_key=None):
     """Signs a specific uid of a OpenPGP key
 
     gpgmeContext: the temporary keyring
@@ -158,7 +160,7 @@ def gpg_sign_uid(gpgmeContext, gpg_homedir, userId, secret_key=None):
     @return: True/False depending if this uid was signed for the first time
     by this key
     """
-    gpg_import_private_key(gpgmeContext, secret_key)
+    import_private_key(gpgmeContext, secret_key)
 
     primary_key = [key for key in gpgmeContext.keylist(None, True)][0]
     gpgmeContext.signers = [primary_key]
@@ -191,13 +193,13 @@ def gpg_sign_uid(gpgmeContext, gpg_homedir, userId, secret_key=None):
     return first_sig
 
 
-def gpg_encrypt_data(gpgmeContext, data, uid, armor=True):
+def encrypt_data(gpgmeContext, data, uid, armor=True):
     """Encrypts @data for the recipients @uid
     """
     plaintext = BytesIO(data)
     ciphertext = BytesIO()
     gpgmeContext.armor = armor
-    recipients = gpg_get_keylist(gpgmeContext, uid)
+    recipients = get_keylist(gpgmeContext, uid)
 
     gpgmeContext.encrypt(recipients, gpgme.ENCRYPT_ALWAYS_TRUST,
                         plaintext, ciphertext)
@@ -235,7 +237,7 @@ def format_fpr(fpr):
     return s
 
 
-def gpg_format_key(gpgmeKey):
+def format_key(gpgmeKey):
     """Returns a string representation of @gpgmeKey
 
     It contains info about: length of key, keyid, expiration date, creation date,

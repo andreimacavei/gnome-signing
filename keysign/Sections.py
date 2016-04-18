@@ -326,7 +326,7 @@ class GetKeySection(Gtk.VBox):
 
     def verify_downloaded_key(self, downloaded_data, fingerprint):
         # FIXME: implement a better and more secure way to verify the key
-        res = gpg.gpg_import_keydata(self.ctx, downloaded_data)
+        res = gpg.import_keydata(self.ctx, downloaded_data)
         if res and len(res.imports):
             (imported_key_fpr, null, null) = res.imports[0]
             if imported_key_fpr == fingerprint:
@@ -354,7 +354,7 @@ class GetKeySection(Gtk.VBox):
         # For each key downloaded we create a new gpgme.Context object and
         # set up a temporary dir for gpg
         self.ctx = gpgme.Context()
-        self.tmp_gpghome = gpg.gpg_set_engine(self.ctx, protocol=gpgme.PROTOCOL_OpenPGP, dir_prefix='tmp.gpghome')
+        self.tmp_gpghome = gpg.set_engine(self.ctx, protocol=gpgme.PROTOCOL_OpenPGP, dir_prefix='tmp.gpghome')
 
         other_clients = self.sort_clients(other_clients, fingerprint)
 
@@ -393,7 +393,7 @@ class GetKeySection(Gtk.VBox):
         self.log.debug("I will sign key with fpr {}".format(fingerprint))
 
         ctx = gpgme.Context()
-        gpg_homedir = gpg.gpg_set_engine(ctx)
+        gpg_homedir = gpg.set_engine(ctx)
 
         keydata = data or self.received_key_data
         # FIXME: until this (https://code.launchpad.net/~daniele-athome/pygpgme/pygpgme/+merge/173333)
@@ -406,9 +406,9 @@ class GetKeySection(Gtk.VBox):
 
         # 1. Fetch the key into a temporary keyring
         self.log.debug('Trying to import key\n%s', keydata)
-        if gpg.gpg_import_keydata(ctx, keydata):
+        if gpg.import_keydata(ctx, keydata):
 
-            keys = gpg.gpg_get_keylist(ctx, fingerprint)
+            keys = gpg.get_keylist(ctx, fingerprint)
             self.log.info("Found keys %s for fp %s", keys, fingerprint)
             assert len(keys) == 1, "We received multiple keys for fp %s: %s" % (fingerprint, keys)
 
@@ -420,7 +420,7 @@ class GetKeySection(Gtk.VBox):
                 uid_str = uid.uid
                 self.log.info("Processing uid %s %s", uid, uid_str)
 
-                res = gpg.gpg_sign_uid(ctx, gpg_homedir, uid)
+                res = gpg.sign_uid(ctx, gpg_homedir, uid)
                 if not res:
                     # we may have already signed this uid before
                     self.log.info("Uid %s was signed before.\nUpdating signature made by key: %s",
@@ -430,7 +430,7 @@ class GetKeySection(Gtk.VBox):
                 signed_key = gpg.export_key(ctx, fingerprint, True)
                 self.log.info("Exported %d bytes of signed key", len(signed_key))
 
-                encrypted_key = gpg.gpg_encrypt_data(ctx, signed_key, uid_str)
+                encrypted_key = gpg.encrypt_data(ctx, signed_key, uid_str)
 
                 keyid = key.subkeys[0].fpr[-8:]
                 template_ctx = {
@@ -469,8 +469,8 @@ class GetKeySection(Gtk.VBox):
                     self.log.debug('You are signing one of your own keys: %s', key.subkeys[0].fpr)
                     ctx.delete(key, True)
 
-                gpg.gpg_import_keydata(ctx, keydata)
-                keys = gpg.gpg_get_keylist(ctx, fingerprint)
+                gpg.import_keydata(ctx, keydata)
+                keys = gpg.get_keylist(ctx, fingerprint)
                 self.log.info("Found keys %s for fp %s", keys, fingerprint)
                 assert len(keys) == 1, "We received multiple keys for fp %s: %s" % (fingerprint, keys)
 
@@ -488,7 +488,7 @@ class GetKeySection(Gtk.VBox):
                 GLib.idle_add(error_cb, data)
 
         # We are done signing the key so we remove the temporary keyring
-        gpg.gpg_reset_engine(ctx, gpg_homedir)
+        gpg.reset_engine(ctx, gpg_homedir)
         self.log.info("Deleting temporary gpg home dir: %s", gpg_homedir)
         return False
 
@@ -574,12 +574,12 @@ class GetKeySection(Gtk.VBox):
 
     def recieved_key(self, fingerprint, keydata, *data):
         self.received_key_data = keydata
-        keylist =  gpg.gpg_get_keylist(self.ctx, fingerprint, False)
+        keylist =  gpg.get_keylist(self.ctx, fingerprint, False)
         self.log.debug('Getting keylist: %r', keylist)
         # Delete temporary dir after we're done getting the key
         if self.tmp_gpghome:
-            gpg.gpg_reset_engine(self.ctx, self.tmp_gpghome)
+            gpg.reset_engine(self.ctx, self.tmp_gpghome)
             self.log.info("Deleting tmp gpg homedir: %s", self.tmp_gpghome)
 
         gpgmeKey = keylist[0]
-        self.signPage.display_downloaded_key(gpg.gpg_format_key(gpgmeKey))
+        self.signPage.display_downloaded_key(gpg.format_key(gpgmeKey))

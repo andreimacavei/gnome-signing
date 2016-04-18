@@ -40,11 +40,11 @@ class GpgTestSuite(unittest.TestCase):
     def keyfile(self, key):
         return open(os.path.join(keydir, key), 'rb')
 
-    def test_gpg_set_engine(self):
+    def test_set_engine(self):
         ctx = gpgme.Context()
 
         tmpdir = tempfile.mkdtemp(prefix='tmp.gpghome')
-        gpg.gpg_set_engine(ctx, gpgme.PROTOCOL_OpenPGP, tmpdir)
+        gpg.set_engine(ctx, gpgme.PROTOCOL_OpenPGP, tmpdir)
 
         keys = [key for key in ctx.keylist()]
 
@@ -54,7 +54,7 @@ class GpgTestSuite(unittest.TestCase):
         # clean temporary dir
         shutil.rmtree(tmpdir, ignore_errors=True)
 
-    def test_gpg_reset_engine(self):
+    def test_reset_engine(self):
         ctx = gpgme.Context()
         # set a temporary dir for gpg home
         tmpdir = tempfile.mkdtemp(prefix='tmp.gpghome')
@@ -62,7 +62,7 @@ class GpgTestSuite(unittest.TestCase):
 
         # check if we have created the new gpg dir
         self.assertTrue(os.path.isdir(tmpdir))
-        gpg.gpg_reset_engine(ctx, tmpdir, gpgme.PROTOCOL_OpenPGP)
+        gpg.reset_engine(ctx, tmpdir, gpgme.PROTOCOL_OpenPGP)
 
         self.assertEqual(gpgme.PROTOCOL_OpenPGP, ctx.protocol)
         self.assertFalse(os.path.exists(tmpdir))
@@ -70,12 +70,12 @@ class GpgTestSuite(unittest.TestCase):
         # clean temporary dir
         shutil.rmtree(tmpdir, ignore_errors=True)
 
-    def test_gpg_import_private_key(self):
+    def test_import_private_key(self):
         ctx = gpgme.Context()
         tmpdir = tempfile.mkdtemp(prefix='tmp.gpghome')
         ctx.set_engine_info(gpgme.PROTOCOL_OpenPGP, None, tmpdir)
 
-        gpg.gpg_import_private_key(ctx)
+        gpg.import_private_key(ctx)
 
         # get the user's secret keys
         default_ctx = gpgme.Context()
@@ -92,7 +92,7 @@ class GpgTestSuite(unittest.TestCase):
         # clean temporary dir
         shutil.rmtree(tmpdir, ignore_errors=True)
 
-    def test_gpg_import_keydata(self):
+    def test_import_keydata(self):
         ctx = gpgme.Context()
         tmpdir = tempfile.mkdtemp(prefix='tmp.gpghome')
         ctx.set_engine_info(gpgme.PROTOCOL_OpenPGP, None, tmpdir)
@@ -100,13 +100,13 @@ class GpgTestSuite(unittest.TestCase):
         with self.keyfile('testkey1.pub') as fp:
             keydata = fp.read()
 
-        res = gpg.gpg_import_keydata(ctx, keydata)
+        res = gpg.import_keydata(ctx, keydata)
         self.assertTrue(res)
 
         # can we get the key ?
         key = ctx.get_key('john.doe@test.com')
 
-    def test_gpg_sign_uid(self):
+    def test_sign_uid(self):
         ctx = gpgme.Context()
         tmpdir = tempfile.mkdtemp(prefix='tmp.gpghome')
         ctx.set_engine_info(gpgme.PROTOCOL_OpenPGP, None, tmpdir)
@@ -119,7 +119,7 @@ class GpgTestSuite(unittest.TestCase):
 
         userId = ctx.get_key('john.doe@test.com').uids[0]
         len_before = len(userId.signatures)
-        res = gpg.gpg_sign_uid(ctx, tmpdir, userId, secret_key)
+        res = gpg.sign_uid(ctx, tmpdir, userId, secret_key)
 
         self.assertTrue(res)
 

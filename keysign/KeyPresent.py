@@ -133,7 +133,7 @@ def main(args=sys.argv):
         #if arguments.gpg:
         #    keyid = arguments.file
         #    ctx = gpgme.Context()
-        #    found_keys = gpg.gpg_get_keylist(ctx, keyid)
+        #    found_keys = gpg.get_keylist(ctx, keyid)
         #    # We take the first item we found and export the actual keydata
         #    fpr = found_keys[0].subkeys[0].fpr
         #    keydata = gpg.extract_keydata(ctx, fpr, True)

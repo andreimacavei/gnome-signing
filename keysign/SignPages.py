@@ -58,7 +58,7 @@ def signatures_for_keyid(keyid, context=None):
     else:
         ctx = _context if _context else gpgme.Context()
 
-    sigs = gpg.gpg_get_siglist(ctx, keyid)
+    sigs = gpg.get_siglist(ctx, keyid)
 
     siglist = []
     for sig in sigs:

@@ -33,7 +33,7 @@ def main():
         sys.exit(1)
     key = sys.argv[1]
     keyring = gpgme.Context()
-    keys = gpg.gpg_get_keylist(keyring, key)
+    keys = gpg.get_keylist(keyring, key)
     # Heh, we take the first key here. Maybe we should raise a warning
     # or so, when there is more than one key.
     fpr = keys[0].subkeys[0].fpr
