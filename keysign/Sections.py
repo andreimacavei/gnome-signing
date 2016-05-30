@@ -328,7 +328,7 @@ class GetKeySection(Gtk.VBox):
         # FIXME: implement a better and more secure way to verify the key
         res = gpg.import_keydata(self.ctx, downloaded_data)
         if res and len(res.imports):
-            (imported_key_fpr, null, null) = res.imports[0]
+            imported_key_fpr = res.imports[0][0]
             if imported_key_fpr == fingerprint:
                 result = True
             else:
