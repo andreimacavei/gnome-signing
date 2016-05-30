@@ -462,7 +462,15 @@ class GetKeySection(Gtk.VBox):
                                  body=body, files=[filename])
 
 
-                # we have to re-import the key to have each UID signed individually
+                # FIXME: Find a better and cleaner way to do this ...
+                # This is a sort of ugly hack for us to sign each UID individually and send an email
+                # with only that UID signed. The reason is that we cannot delete a signature from a key
+                # that is imported in the temp gpg context. So , to bypass this, we do:
+                #   1. Sign a UID for the key
+                #   2. Send an email with the key having only that UID signed
+                #   3. Delete and re-import the key from the local context
+                #   4. Re-fetch the key from the local keylist
+                #   5. Repeat
                 try:
                     ctx.delete(key)
                 except gpgme.GpgmeError as exp:
@@ -474,6 +482,7 @@ class GetKeySection(Gtk.VBox):
                 self.log.info("Found keys %s for fp %s", keys, fingerprint)
                 assert len(keys) == 1, "We received multiple keys for fp %s: %s" % (fingerprint, keys)
 
+                # Because we have re-import the key after each UID sign, we must update the reference
                 key = keys[0]
 
             # FIXME: Can we get rid of self.tmpfiles here already? Even if the MUA is still running?
