@@ -56,7 +56,8 @@ def signatures_for_keyid(keyid, context=None):
     if context is not None:
         ctx = context
     else:
-        ctx = _context if _context else gpgme.Context()
+        _context = _context if _context else gpgme.Context()
+        ctx = _context
 
     sigs = gpg.get_siglist(ctx, keyid)
 
