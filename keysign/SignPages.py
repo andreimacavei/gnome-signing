@@ -60,10 +60,7 @@ def signatures_for_keyid(keyid, context=None):
         ctx = _context
 
     sigs = gpg.get_siglist(ctx, keyid)
-
-    siglist = []
-    for sig in sigs:
-        siglist.append((sig.keyid, sig.timestamp, sig.uid))
+    siglist = [(sig.keyid, sig.timestamp, sig.uid) for sig in sigs]
 
     return siglist
 
