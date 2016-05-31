@@ -482,7 +482,7 @@ class GetKeySection(Gtk.VBox):
                 self.log.info("Found keys %s for fp %s", keys, fingerprint)
                 assert len(keys) == 1, "We received multiple keys for fp %s: %s" % (fingerprint, keys)
 
-                # Because we have re-import the key after each UID sign, we must update the reference
+                # Because we have to re-import the key after each UID sign, we must update the reference
                 key = keys[0]
 
             # FIXME: Can we get rid of self.tmpfiles here already? Even if the MUA is still running?
@@ -497,8 +497,9 @@ class GetKeySection(Gtk.VBox):
                 GLib.idle_add(error_cb, data)
 
         # We are done signing the key so we remove the temporary keyring
-        gpg.reset_engine(ctx, gpg_homedir)
         self.log.info("Deleting temporary gpg home dir: %s", gpg_homedir)
+        gpg.reset_engine(ctx, gpg_homedir)
+
         return False
 
 
