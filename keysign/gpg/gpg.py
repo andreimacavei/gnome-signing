@@ -117,17 +117,17 @@ def import_keydata(gpgmeContext, keydata):
     return result
 
 
-def get_keylist(gpgmeContext, keyid=None, secret=False, expired=False):
+def get_keylist(gpgmeContext, keyid=None, secret=False, expire_flag=False):
     """Returns the keys found in @gpgmeContext
 
     @keyid: the unique id of a key.
     @secret: if set to True it returns the secret keys, else it returns the public keys.
-    @expired: if set to True it also returns the expired keys.
+    @expire_flag: if set to True it also return the expired keys.
     """
     keys = []
     for key in gpgmeContext.keylist(keyid, secret):
         exp_date = datetime.fromtimestamp(float(key.subkeys[0].expires))
-        if expired == False and key.subkeys[0].expires != 0 and exp_date.date() < datetime.today().date():
+        if expire_flag == False and key.subkeys[0].expires != 0 and exp_date.date() < datetime.today().date():
             continue
         keys.append(key)
 
