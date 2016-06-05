@@ -122,7 +122,7 @@ def get_keylist(gpgmeContext, keyid=None, secret=False, expire_flag=False):
 
     @keyid: the unique id of a key.
     @secret: if set to True it returns the secret keys, else it returns the public keys.
-    @expire_flag: if set to True it also return the expired keys.
+    @expire_flag: if set to True it also returns the expired keys.
     """
     keys = []
     for key in gpgmeContext.keylist(keyid, secret):
@@ -132,6 +132,29 @@ def get_keylist(gpgmeContext, keyid=None, secret=False, expire_flag=False):
         keys.append(key)
 
     return keys
+
+def get_personal_keys(keyid=None, secret=False):
+    """Returns the personal keys found in User's own keyring.
+
+    @keyid: the unique id of a key.
+    @secret: if set to True it returns the secret part of the keys,
+        else it returns the public part.
+    """
+    ctx = gpgme.Context() # the user's personal keyring
+    secret_personal_keys = [key for key in ctx.keylist(keyid, True)]
+    if secret:
+        return secret_personal_keys
+
+    all_public_keys = [key for key in ctx.keylist(None, False)]
+
+    public_personal_keys = []
+    for key in all_public_keys:
+        for skey in secret_personal_keys:
+            if key.subkeys[0].fpr == skey.subkeys[0].fpr:
+                public_personal_keys.append(key)
+                break
+
+    return public_personal_keys
 
 
 def get_siglist(gpgmeContext, keyid):
