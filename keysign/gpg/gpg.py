@@ -56,6 +56,29 @@ def reset_engine(gpgmeContext, tmp_dir=None, protocol=gpgme.PROTOCOL_OpenPGP):
         shutil.rmtree(tmp_dir, ignore_errors=True)
 
 
+def export_secret_keys():
+    """Exports the user's private keys.
+
+    This will export the private keys found in the current GnuPG homedir.
+    """
+
+    try:
+        gnupg_home = os.environ['GNUPGHOME']
+    except KeyError as err:
+        gnupg_home = os.environ['HOME'] + '/.gnupg'
+
+    # At least a private key must be inside the current GnuPG homedir
+    assert len([key for key in gpgme.Context().keylist(None,True)]) != 0, \
+        ("Error: no private key found inside gpg homedir: %s" % (gnupg_home,))
+
+    keydata = subprocess.check_output(["gpg", "--armor", "--export-secret-keys"])
+    assert len(keydata) != 0, ("Error: 0-bytes privatekey data exported")
+
+    log.debug("Exported private key data:\n%s",keydata)
+
+    return keydata
+
+
 def import_private_key(gpgmeContext, secret_key=None):
     """Imports the user's private key from @secret_key or the default keyring
      to a temporary context.
@@ -67,7 +90,7 @@ def import_private_key(gpgmeContext, secret_key=None):
         # https://code.launchpad.net/~daniele-athome/pygpgme/pygpgme/+merge/173333
         # , we cannot use the new GPGME features such as private key export or minimal export.
         # We use this hack to export the private keys to a file from which we'll import in our keyring.
-        keydata = subprocess.check_output(["gpg", "--armor", "--export-secret-keys"])
+        keydata = export_secret_keys()
 
     with BytesIO(keydata) as fp:
         gpgmeContext.import_(fp)
