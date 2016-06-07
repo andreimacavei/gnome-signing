@@ -63,9 +63,10 @@ def import_private_key(gpgmeContext, secret_key=None):
     if secret_key:
         keydata = secret_key
     else:
-        # XXX: There is no option to export a private key in GPGME. Latest post about it can
-        # be found here: https://lists.gnupg.org/pipermail/gnupg-devel/2015-August/030229.html
-        # We use this hack for now to import user's private key into a temp keyring
+        # Until the author of pygpgme (James Henstridge) doesn't merge this:
+        # https://code.launchpad.net/~daniele-athome/pygpgme/pygpgme/+merge/173333
+        # , we cannot use the new GPGME features such as private key export or minimal export.
+        # We use this hack to export the private keys to a file from which we'll import in our keyring.
         keydata = subprocess.check_output(["gpg", "--armor", "--export-secret-keys"])
 
     with BytesIO(keydata) as fp:
